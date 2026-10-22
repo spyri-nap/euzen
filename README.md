@@ -1,5 +1,7 @@
 # Eúzēn · εὖ ζῆν
 
+Aktueller Entwicklungsstand: **0.3**. [Version 0.2](docs/VERSION-0.2.md) ergänzt Entwürfe und Ergebniskorrekturen; [Version 0.3](docs/VERSION-0.3.md) ergänzt automatische Zeitblöcke, Vorbereitung und Satzvorgaben. Diese Versionshinweise ersetzen die betreffenden ursprünglichen 0.1-Regeln unten.
+
 Ein persönlicher Raum für funktionelles Training und ein gutes Leben in Bewegung. Das Grundgerüst bildet einen vollständigen Ablauf ab: Übungen auswählen, Workout konfigurieren, Woche planen, trainieren und echte Ergebnisse auswerten.
 
 ## Lokal starten

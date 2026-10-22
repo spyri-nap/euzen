@@ -35,6 +35,7 @@ import {
 import { previousResult } from "../domain/analytics";
 import { Field, Modal, Num } from "./common";
 import { useWakeLock } from "./useWakeLock";
+import { advanceGuided, targetFor } from "../domain/guided";
 
 export function Player({
   state,
@@ -55,7 +56,11 @@ export function Player({
   const audioRef = useRef<AudioContext | null>(null);
   const phase = s.phases[s.phaseIndex];
   const b = s.snapshot.blocks.find((b) => b.id === phase.blockId)!;
-  const p = b.exercises.find((p) => p.id === phase.prescriptionId)!;
+  const p = targetFor(
+    b,
+    b.exercises.find((p) => p.id === phase.prescriptionId)!,
+    phase.round,
+  );
   const e = s.exercises.find((e) => e.id === phase.exerciseId)!;
   const existing = s.results.find((r) => r.stepId === phase.id);
   const draft = s.draft ?? {
@@ -92,6 +97,24 @@ export function Player({
   }, []);
   useEffect(() => {
     if (s.timer.status !== "running" || !timed || remaining > 0) return;
+    if (
+      (b.guided && ["emom", "interval", "countdown"].includes(b.mode)) ||
+      phase.kind === "prepare"
+    ) {
+      patch((current) => advanceGuided(current, now));
+      if (state.preferences.audio && audioRef.current) {
+        const ctx = audioRef.current,
+          osc = ctx.createOscillator(),
+          gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.2);
+      }
+      return;
+    }
     const expiry =
       (s.timer.startedAt ?? now) +
       Math.max(0, targetDuration * 1000 - s.timer.elapsedMs);
@@ -234,6 +257,7 @@ export function Player({
         notes: parsed.notes,
         roundsCompleted: b.mode === "amrap" ? parsed.rounds : 1,
         skipped: skip,
+        pendingConfirmation: false,
         recordedAt: stamp,
       };
       const results = work
@@ -316,9 +340,11 @@ export function Player({
           <h1>
             {work
               ? e.name
-              : phase.kind === "rest"
-                ? "Zeit zum Durchatmen."
-                : "In Ruhe wechseln."}
+              : phase.kind === "prepare"
+                ? "Mach dich bereit."
+                : phase.kind === "rest"
+                  ? "Zeit zum Durchatmen."
+                  : "In Ruhe wechseln."}
           </h1>
           <p className="player-cue">
             {work
@@ -407,7 +433,9 @@ export function Player({
           )}
           {p.notes && work && <p className="callout">{p.notes}</p>}
           <p className="hint">
-            Der nächste Schritt startet nach deiner Bestätigung.
+            {b.guided
+              ? "Zeitfenster laufen automatisch; Leistungen bitte nach der Einheit bestätigen."
+              : "Arbeitsphasen bestätigst du selbst; Pausen wechseln automatisch weiter."}
             Hintergrundsignale hängen vom Browser ab.
           </p>
         </section>
@@ -416,6 +444,15 @@ export function Player({
           {work ? (
             <>
               <h2>Wie lief es?</h2>
+              {b.guided &&
+                ["emom", "interval", "countdown"].includes(b.mode) && (
+                  <p className="callout">
+                    Dieser Zeitblock läuft automatisch. Eingetragene Werte
+                    bleiben zunächst unbestätigt. Bestätige deine tatsächliche
+                    Leistung nach der Einheit unter Fortschritt → Ergebnis
+                    korrigieren.
+                  </p>
+                )}
               <p>Trage ein, was du tatsächlich geschafft hast.</p>
               {b.mode === "amrap" ? (
                 <>

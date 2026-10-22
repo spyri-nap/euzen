@@ -239,7 +239,11 @@ export function Progress({
                     Ergebnis korrigieren
                   </button>
                   {r.skipped ? (
-                    <p>Übersprungen</p>
+                    <p>
+                      {r.pendingConfirmation
+                        ? "Zeitfenster beendet · tatsächliche Ausführung noch bestätigen"
+                        : "Übersprungen"}
+                    </p>
                   ) : (
                     <>
                       <p>
@@ -297,6 +301,13 @@ export function Progress({
                 r.id === result.id ? result : r,
               ),
             };
+            if (
+              changed.results.length ===
+                changed.phases.filter((p) => p.kind === "work").length &&
+              changed.results.every((r) => !r.skipped && !r.pendingConfirmation)
+            )
+              changed.status = "complete";
+            else changed.status = "incomplete";
             update((s) => ({
               ...s,
               sessions: s.sessions.map((x) =>
@@ -332,13 +343,38 @@ function Correction({
             setError("Bitte prüfe die Zahlen und Wertebereiche.");
             return;
           }
-          onSave(checked.data);
+          const saved = checked.data;
+          if (result.pendingConfirmation && !saved.pendingConfirmation)
+            saved.notes = saved.notes
+              .replace(
+                "Zeitfenster abgelaufen. Tatsächliche Ausführung noch bestätigen.",
+                "",
+              )
+              .trim();
+          onSave(saved);
         }}
       >
         <p>
           Die Auswertung wird neu berechnet. Die ursprüngliche Workout-Vorlage
           bleibt erhalten.
         </p>
+        {(result.pendingConfirmation || result.skipped) && (
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={!draft.skipped}
+              onChange={(e) =>
+                set({
+                  ...draft,
+                  skipped: !e.target.checked,
+                  pendingConfirmation:
+                    !e.target.checked && result.pendingConfirmation,
+                })
+              }
+            />
+            Ich habe diesen Arbeitsschritt tatsächlich absolviert.
+          </label>
+        )}
         <Num
           label="Tatsächliche Reps"
           value={draft.reps}

@@ -93,9 +93,24 @@ export function compilePhases(template: WorkoutTemplate): Phase[] {
   // keep their compiled phases and therefore retain their original sequence.
   return template.blocks.flatMap((b) => {
     const own = phases.filter((p) => p.blockId === b.id);
-    return b.mode === "sets"
-      ? b.exercises.flatMap((e) => own.filter((p) => p.prescriptionId === e.id))
-      : own;
+    const ordered =
+      b.mode === "sets"
+        ? b.exercises.flatMap((e) =>
+            own.filter((p) => p.prescriptionId === e.id),
+          )
+        : own;
+    if (!b.prepare) return ordered;
+    const first = ordered[0];
+    return [
+      {
+        ...first,
+        id: `${b.id}:prepare`,
+        kind: "prepare" as const,
+        duration: b.prepare,
+        manual: false,
+      },
+      ...ordered,
+    ];
   });
 }
 export function newSession(

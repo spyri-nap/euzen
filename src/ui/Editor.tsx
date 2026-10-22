@@ -247,6 +247,32 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                 </Field>
               </div>
               <p className="hint">{modeHelp[b.mode]}</p>
+              <Num
+                label="Vorbereitung (Sek.)"
+                value={b.prepare}
+                max={120}
+                onChange={(prepare) => updateBlock({ ...b, prepare })}
+              />
+              {["emom", "interval", "countdown"].includes(b.mode) && (
+                <label className="checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={b.guided}
+                    onChange={(e) =>
+                      updateBlock({ ...b, guided: e.target.checked })
+                    }
+                  />
+                  Zeitblock automatisch durchlaufen
+                </label>
+              )}
+              {b.guided && (
+                <p className="hint">
+                  Zeitfenster laufen auch ohne Bestätigung weiter. Tatsächliche
+                  Leistungen bestätigst du anschließend in der
+                  Trainingsgeschichte. Unbestätigte Schritte zählen nicht zur
+                  Leistung.
+                </p>
+              )}
               <div className="number-grid">
                 {b.mode !== "amrap" && (
                   <Num
@@ -405,6 +431,59 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                         </Field>
                       )}
                     </div>
+                    {["sets", "rounds"].includes(b.mode) && (
+                      <details>
+                        <summary>Individuelle Vorgaben je Satz / Runde</summary>
+                        {Array.from(
+                          { length: Math.min(b.rounds, 100) },
+                          (_, i) => {
+                            const target = b.setTargets.find(
+                              (t) =>
+                                t.prescriptionId === p.id && t.round === i + 1,
+                            );
+                            const editTarget = (values: {
+                              reps?: number;
+                              load?: number;
+                            }) =>
+                              updateBlock({
+                                ...b,
+                                setTargets: [
+                                  ...b.setTargets.filter(
+                                    (t) =>
+                                      !(
+                                        t.prescriptionId === p.id &&
+                                        t.round === i + 1
+                                      ),
+                                  ),
+                                  {
+                                    prescriptionId: p.id,
+                                    round: i + 1,
+                                    reps: target?.reps ?? p.reps,
+                                    load: target?.load ?? p.load,
+                                    ...values,
+                                  },
+                                ],
+                              });
+                            return (
+                              <div className="two-col" key={i}>
+                                <Num
+                                  label={`Satz ${i + 1} · Reps`}
+                                  min={1}
+                                  value={target?.reps ?? p.reps}
+                                  onChange={(reps) => editTarget({ reps })}
+                                />
+                                <Num
+                                  label={`Satz ${i + 1} · kg je Gewicht`}
+                                  step={0.5}
+                                  value={target?.load ?? p.load}
+                                  onChange={(load) => editTarget({ load })}
+                                />
+                              </div>
+                            );
+                          },
+                        )}
+                      </details>
+                    )}
                     <details>
                       <summary>Seite, Tempo & weitere Vorgaben</summary>
                       <div className="number-grid">

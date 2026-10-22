@@ -89,6 +89,19 @@ export const blockSchema = z.object({
   work: seconds.refine((n) => n >= 1),
   rest: seconds,
   transition: seconds,
+  guided: z.boolean().default(false),
+  prepare: seconds.default(0),
+  setTargets: z
+    .array(
+      z.object({
+        prescriptionId: id,
+        round: posInt,
+        reps: posInt,
+        load: z.number().min(0).max(1000),
+      }),
+    )
+    .max(10000)
+    .default([]),
   exercises: z.array(prescriptionSchema).min(1).max(100),
 });
 export const templateSchema = z
@@ -147,6 +160,7 @@ export const resultSchema = z.object({
   notes: text,
   roundsCompleted: z.number().int().min(0).max(10000).default(1),
   skipped: z.boolean(),
+  pendingConfirmation: z.boolean().default(false),
   recordedAt: timestamp,
 });
 export const draftSchema = z.object({
@@ -165,7 +179,7 @@ export const phaseSchema = z.object({
   prescriptionId: id,
   exerciseId: id,
   round: posInt,
-  kind: z.enum(["work", "rest", "transition"]),
+  kind: z.enum(["work", "rest", "transition", "prepare"]),
   duration: seconds,
   manual: z.boolean(),
 });
@@ -278,6 +292,9 @@ export function block(exerciseId: string): WorkoutBlock {
     work: 45,
     rest: 30,
     transition: 10,
+    guided: false,
+    prepare: 0,
+    setTargets: [],
     exercises: [prescription(exerciseId)],
   };
 }
@@ -321,6 +338,10 @@ export function validateState(input: unknown): AppState {
       throw new Error("AMRAP benötigt eine Übung; verwende Runden für Zirkel.");
   }
   for (const session of s.sessions) {
+    if (session.results.some((r) => r.pendingConfirmation && !r.skipped))
+      throw new Error(
+        "Unbestätigte Leistungen dürfen nicht als absolviert zählen.",
+      );
     const ids = new Set(session.exercises.map((e) => e.id));
     if (
       session.phaseIndex >= session.phases.length ||

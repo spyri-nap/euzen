@@ -72,6 +72,7 @@ function result(
     rir: 3,
     notes: "",
     skipped: false,
+    pendingConfirmation: false,
     recordedAt: Date.now(),
     distance: null,
     roundsCompleted: 1,
