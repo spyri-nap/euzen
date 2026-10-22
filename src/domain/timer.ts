@@ -89,7 +89,14 @@ export function compilePhases(template: WorkoutTemplate): Phase[] {
       }
     }
   }
-  return phases;
+  // Traditional sets finish A1,A2,... before B1,B2. Existing session snapshots
+  // keep their compiled phases and therefore retain their original sequence.
+  return template.blocks.flatMap((b) => {
+    const own = phases.filter((p) => p.blockId === b.id);
+    return b.mode === "sets"
+      ? b.exercises.flatMap((e) => own.filter((p) => p.prescriptionId === e.id))
+      : own;
+  });
 }
 export function newSession(
   template: WorkoutTemplate,

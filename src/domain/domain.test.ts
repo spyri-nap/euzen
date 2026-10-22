@@ -114,6 +114,24 @@ describe("timestamp timer", () => {
   });
 });
 describe("workout compilation and snapshots", () => {
+  it("completes traditional sets exercise by exercise", () => {
+    const t = template("sets");
+    t.blocks[0].exercises.push(prescription("row"));
+    expect(
+      compilePhases(t)
+        .filter((p) => p.kind === "work")
+        .map((p) => p.exerciseId),
+    ).toEqual(["goblet", "goblet", "row", "row"]);
+  });
+  it("preserves already compiled session order when templates change", () => {
+    const t = template("rounds");
+    t.blocks[0].exercises.push(prescription("row"));
+    const s = newSession(t, initialState().exercises, null);
+    t.blocks[0].mode = "sets";
+    expect(
+      s.phases.filter((p) => p.kind === "work").map((p) => p.exerciseId),
+    ).toEqual(["goblet", "row", "goblet", "row"]);
+  });
   it("generates deterministic unique work and rest steps for a circuit", () => {
     const t = template("rounds");
     t.blocks[0].exercises.push(prescription("row"));

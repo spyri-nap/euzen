@@ -8,6 +8,8 @@ import {
   number,
   type AppState,
   type WorkoutSession,
+  type SetResult,
+  resultSchema,
 } from "../domain/model";
 import {
   coverage,
@@ -15,9 +17,16 @@ import {
   resultVolume,
   summary,
 } from "../domain/analytics";
-import { Empty, Modal } from "./common";
+import { Empty, Modal, Field, Num } from "./common";
 
-export function Progress({ state }: { state: AppState }) {
+export function Progress({
+  state,
+  update,
+}: {
+  state: AppState;
+  update: (fn: (s: AppState) => AppState) => void;
+}) {
+  const [editing, setEditing] = useState<SetResult | null>(null);
   const [period, setPeriod] = useState("all");
   const [detail, setDetail] = useState<WorkoutSession | null>(null);
   const cutoff =
@@ -223,6 +232,12 @@ export function Progress({ state }: { state: AppState }) {
                     {e.name}{" "}
                     <span className="muted">· Durchgang {r.round}</span>
                   </h4>
+                  <button
+                    className="btn small-btn"
+                    onClick={() => setEditing(r)}
+                  >
+                    Ergebnis korrigieren
+                  </button>
                   {r.skipped ? (
                     <p>Übersprungen</p>
                   ) : (
@@ -271,7 +286,109 @@ export function Progress({ state }: { state: AppState }) {
           {detail.notes && <div className="callout">{detail.notes}</div>}
         </Modal>
       )}
+      {editing && detail && (
+        <Correction
+          result={editing}
+          onClose={() => setEditing(null)}
+          onSave={(result) => {
+            const changed = {
+              ...detail,
+              results: detail.results.map((r) =>
+                r.id === result.id ? result : r,
+              ),
+            };
+            update((s) => ({
+              ...s,
+              sessions: s.sessions.map((x) =>
+                x.id === changed.id ? changed : x,
+              ),
+            }));
+            setDetail(changed);
+            setEditing(null);
+          }}
+        />
+      )}
     </>
+  );
+}
+function Correction({
+  result,
+  onSave,
+  onClose,
+}: {
+  result: SetResult;
+  onSave: (r: SetResult) => void;
+  onClose: () => void;
+}) {
+  const [draft, set] = useState(result);
+  const [error, setError] = useState("");
+  return (
+    <Modal title="Trainingsergebnis korrigieren" onClose={onClose}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const checked = resultSchema.safeParse(draft);
+          if (!checked.success) {
+            setError("Bitte prüfe die Zahlen und Wertebereiche.");
+            return;
+          }
+          onSave(checked.data);
+        }}
+      >
+        <p>
+          Die Auswertung wird neu berechnet. Die ursprüngliche Workout-Vorlage
+          bleibt erhalten.
+        </p>
+        <Num
+          label="Tatsächliche Reps"
+          value={draft.reps}
+          max={100000}
+          onChange={(reps) => set({ ...draft, reps })}
+        />
+        <Num
+          label="kg je Gewicht"
+          value={draft.load}
+          step={0.5}
+          onChange={(load) => set({ ...draft, load })}
+        />
+        <Num
+          label="Dauer (Sekunden)"
+          value={draft.seconds}
+          max={86400}
+          onChange={(seconds) => set({ ...draft, seconds })}
+        />
+        {(["rpe", "rir"] as const).map((key) => (
+          <Field label={key.toUpperCase()} key={key}>
+            <input
+              type="number"
+              min={0}
+              max={10}
+              step={0.5}
+              value={draft[key] ?? ""}
+              onChange={(e) =>
+                set({
+                  ...draft,
+                  [key]: e.target.value === "" ? null : Number(e.target.value),
+                })
+              }
+            />
+          </Field>
+        ))}
+        <Field label="Notiz">
+          <textarea
+            value={draft.notes}
+            maxLength={2000}
+            onChange={(e) => set({ ...draft, notes: e.target.value })}
+          />
+        </Field>
+        {error && <p role="alert">{error}</p>}
+        <div className="modal-actions">
+          <button className="btn primary" type="submit">
+            Korrektur speichern
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 export function Stat({

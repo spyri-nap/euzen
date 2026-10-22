@@ -34,6 +34,7 @@ import {
 } from "../domain/timer";
 import { previousResult } from "../domain/analytics";
 import { Field, Modal, Num } from "./common";
+import { useWakeLock } from "./useWakeLock";
 
 export function Player({
   state,
@@ -47,8 +48,10 @@ export function Player({
   onExit: () => void;
 }) {
   const [now, setNow] = useState(Date.now());
+  const wake = useWakeLock();
   const [ending, setEnding] = useState(false);
   const [error, setError] = useState("");
+  const [undo, setUndo] = useState<WorkoutSession | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
   const phase = s.phases[s.phaseIndex];
   const b = s.snapshot.blocks.find((b) => b.id === phase.blockId)!;
@@ -97,6 +100,15 @@ export function Player({
       timer: settle(current.timer, phase.duration, false, now),
       activeMs: activeDuration(current, expiry),
       activeSince: null,
+      ...(phase.kind !== "work" &&
+      current.phaseIndex < current.phases.length - 1
+        ? {
+            phaseIndex: current.phaseIndex + 1,
+            timer: start(freshTimer(), now),
+            activeSince: now,
+            draft: null,
+          }
+        : {}),
     }));
     if (state.preferences.audio && audioRef.current) {
       const ctx = audioRef.current;
@@ -189,6 +201,14 @@ export function Player({
     }
     const parsed = check.data;
     setError("");
+    setUndo(
+      structuredClone({
+        ...s,
+        timer: pause(s.timer, stamp),
+        activeMs: activeDuration(s, stamp),
+        activeSince: null,
+      }),
+    );
     patch((current) => {
       if (current.phaseIndex !== s.phaseIndex) return current;
       const result: SetResult = {
@@ -232,7 +252,12 @@ export function Player({
       };
       if (current.phaseIndex === current.phases.length - 1)
         return finish(updated, !results.some((r) => r.skipped), stamp);
-      return { ...updated, phaseIndex: current.phaseIndex + 1 };
+      return {
+        ...updated,
+        phaseIndex: current.phaseIndex + 1,
+        timer: start(freshTimer(), stamp),
+        activeSince: stamp,
+      };
     });
   };
   const nextPhase = s.phases[s.phaseIndex + 1];
@@ -264,6 +289,24 @@ export function Player({
         aria-label={`Schritt ${s.phaseIndex + 1} von ${s.phases.length}`}
       >
         <div style={{ width: `${(s.phaseIndex / s.phases.length) * 100}%` }} />
+      </div>
+      <div className="button-row">
+        <button
+          className="btn small-btn"
+          disabled={!wake.supported}
+          aria-pressed={wake.enabled}
+          onClick={wake.toggle}
+        >
+          {wake.active
+            ? "Bildschirm bleibt wach"
+            : wake.enabled
+              ? "Wachhalten angefragt"
+              : "Bildschirm wach halten"}
+        </button>
+        <span className="hint">
+          {wake.message ||
+            (!wake.supported ? "In diesem Browser nicht verfügbar." : "")}
+        </span>
       </div>
       <div className="player-layout">
         <section className="player-main">
@@ -515,6 +558,17 @@ export function Player({
             <p className="error" role="alert">
               {error}
             </p>
+          )}
+          {undo && (
+            <button
+              className="btn full"
+              onClick={() => {
+                patch(() => undo);
+                setUndo(null);
+              }}
+            >
+              Letzten Schritt rückgängig machen
+            </button>
           )}
           <button
             className="btn primary full"

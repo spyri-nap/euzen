@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import {
   block,
@@ -16,7 +16,7 @@ import {
 import { Modal, Field, Num } from "./common";
 
 const modeHelp = {
-  sets: "Jede Übung wird pro Durchgang einmal ausgeführt. Du bestätigst jeden Satz manuell. Pause nach jeder Übung.",
+  sets: "Klassische Sätze: erst alle Sätze einer Übung, dann die nächste Übung. Pausen zwischen den Sätzen.",
   rounds:
     "Ein Zirkel: alle Übungen nacheinander, dann Rundenpause. Jeder Satz wird manuell bestätigt.",
   countdown:
@@ -34,19 +34,50 @@ type Props = {
   onSave: (t: WorkoutTemplate) => void;
 };
 export function Editor({ template, exercises, onClose, onSave }: Props) {
+  const draftKey = `euzen-builder:${template?.id ?? "new"}`;
+  const [draftNotice, setDraftNotice] = useState("");
   const [t, set] = useState<WorkoutTemplate>(() =>
-    template
-      ? structuredClone(template)
-      : {
-          id: uid(),
-          name: "Mein neues Workout",
-          description: "",
-          dimension: "Kraft",
-          blocks: [block(exercises[0].id)],
-          sample: false,
-          updatedAt: Date.now(),
-        },
+    (() => {
+      try {
+        const raw = localStorage.getItem(draftKey);
+        if (raw) {
+          const saved = templateSchema.safeParse(JSON.parse(raw));
+          if (
+            saved.success &&
+            saved.data.blocks.every((b) =>
+              b.exercises.every((p) =>
+                exercises.some((e) => e.id === p.exerciseId),
+              ),
+            )
+          )
+            return saved.data;
+        }
+      } catch {
+        /* Invalid drafts never replace templates. */
+      }
+      return template
+        ? structuredClone(template)
+        : {
+            id: uid(),
+            name: "Mein neues Workout",
+            description: "",
+            dimension: "Kraft",
+            blocks: [block(exercises[0].id)],
+            sample: false,
+            updatedAt: Date.now(),
+          };
+    })(),
   );
+  useEffect(() => {
+    try {
+      localStorage.setItem(draftKey, JSON.stringify(t));
+      setDraftNotice("Entwurf auf diesem Gerät gesichert.");
+    } catch {
+      setDraftNotice(
+        "Entwurf konnte nicht gesichert werden. Bitte Workout speichern.",
+      );
+    }
+  }, [t, draftKey]);
   const [error, setError] = useState("");
   const updateBlock = (b: WorkoutBlock) =>
     set({ ...t, blocks: t.blocks.map((x) => (x.id === b.id ? b : x)) });
@@ -81,8 +112,17 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
             sample: false,
             updatedAt: Date.now(),
           });
+          try {
+            localStorage.removeItem(draftKey);
+          } catch {
+            /* Saved template is authoritative. */
+          }
         }}
       >
+        <p role="status" className="hint">
+          {draftNotice} Schließen erhält den Entwurf; „Workout speichern“
+          übernimmt ihn in deine Vorlagen.
+        </p>
         <div className="two-col">
           <Field label="Workout-Name">
             <input
@@ -465,7 +505,7 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
         )}
         <div className="modal-actions sticky-actions">
           <button type="button" className="btn" onClick={onClose}>
-            Verwerfen
+            Schließen · Entwurf behalten
           </button>
           <button type="submit" className="btn primary">
             Workout speichern

@@ -249,7 +249,7 @@ export function App() {
             )}
             {view === "library" && <Library state={state} update={update} />}
             {(view === "progress" || (view === "train" && !active)) && (
-              <Progress state={state} />
+              <Progress state={state} update={update} />
             )}
             {view === "space" && (
               <Space state={state} onPlan={() => navigate("plan")} />
