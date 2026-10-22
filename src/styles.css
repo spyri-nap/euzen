@@ -220,6 +220,10 @@ details[open] summary {
   letter-spacing: 0.2em;
   margin-top: 13px;
 }
+.sidebar > .brand {
+  width: 100%;
+  text-align: center;
+}
 .sidebar-caption {
   font-size: 8px;
   letter-spacing: 0.13em;
@@ -2003,7 +2007,7 @@ details[open] summary {
     padding: 29px 10px 20px;
   }
   .sidebar .brand {
-    font-size: 28px;
+    font-size: 24px;
     text-align: center;
   }
   .brand span {
