@@ -1,0 +1,477 @@
+import { useState } from "react";
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import {
+  block,
+  dimensions,
+  modeLabels,
+  modes,
+  prescription,
+  sections,
+  templateSchema,
+  uid,
+  type Exercise,
+  type WorkoutBlock,
+  type WorkoutTemplate,
+} from "../domain/model";
+import { Modal, Field, Num } from "./common";
+
+const modeHelp = {
+  sets: "Jede Übung wird pro Durchgang einmal ausgeführt. Du bestätigst jeden Satz manuell. Pause nach jeder Übung.",
+  rounds:
+    "Ein Zirkel: alle Übungen nacheinander, dann Rundenpause. Jeder Satz wird manuell bestätigt.",
+  countdown:
+    "Ein Countdown je Übung und Durchgang. Nach Ablauf bestätigst du die tatsächliche Leistung.",
+  interval:
+    "Arbeitszeit je Übung, Übergang zwischen Übungen, Pause nach jeder Runde.",
+  emom: "Ein festes Zeitfenster je Übung. Melde deine Reps vor Ablauf; die verbleibende Zeit ist Pause. Der nächste Schritt startet nach Bestätigung.",
+  amrap:
+    "Eine Übung mit Zeitlimit. Zähle vollständige Runden manuell; eine Runde entspricht den vorgegebenen Reps. Teil-Reps ergänzt du am Ende.",
+};
+type Props = {
+  template?: WorkoutTemplate;
+  exercises: Exercise[];
+  onClose: () => void;
+  onSave: (t: WorkoutTemplate) => void;
+};
+export function Editor({ template, exercises, onClose, onSave }: Props) {
+  const [t, set] = useState<WorkoutTemplate>(() =>
+    template
+      ? structuredClone(template)
+      : {
+          id: uid(),
+          name: "Mein neues Workout",
+          description: "",
+          dimension: "Kraft",
+          blocks: [block(exercises[0].id)],
+          sample: false,
+          updatedAt: Date.now(),
+        },
+  );
+  const [error, setError] = useState("");
+  const updateBlock = (b: WorkoutBlock) =>
+    set({ ...t, blocks: t.blocks.map((x) => (x.id === b.id ? b : x)) });
+  const moveBlock = (i: number, dir: number) => {
+    const blocks = [...t.blocks];
+    [blocks[i], blocks[i + dir]] = [blocks[i + dir], blocks[i]];
+    set({ ...t, blocks });
+  };
+  return (
+    <Modal
+      title={template ? "Workout bearbeiten" : "Dein Workout gestalten"}
+      onClose={onClose}
+      wide
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const parsed = templateSchema.safeParse(t);
+          if (!parsed.success)
+            return setError(
+              "Prüfe die Werte: mindestens ein Block und eine Übung, positive Reps/Runden/Arbeitszeiten und keine negativen Pausen.",
+            );
+          if (
+            t.blocks.some((b) => b.mode === "amrap" && b.exercises.length !== 1)
+          )
+            return setError(
+              "AMRAP unterstützt eine Übung pro Block. Für Zirkel wähle Runden oder Intervalle.",
+            );
+          onSave({
+            ...parsed.data,
+            name: parsed.data.name.trim() || "Mein Workout",
+            sample: false,
+            updatedAt: Date.now(),
+          });
+        }}
+      >
+        <div className="two-col">
+          <Field label="Workout-Name">
+            <input
+              required
+              value={t.name}
+              maxLength={100}
+              onChange={(e) => set({ ...t, name: e.target.value })}
+            />
+          </Field>
+          <Field label="Fokus">
+            <select
+              value={t.dimension}
+              onChange={(e) =>
+                set({
+                  ...t,
+                  dimension: e.target.value as WorkoutTemplate["dimension"],
+                })
+              }
+            >
+              {dimensions.map((d) => (
+                <option key={d}>{d}</option>
+              ))}
+            </select>
+          </Field>
+        </div>
+        <Field label="Beschreibung / persönliche Hinweise">
+          <textarea
+            maxLength={2000}
+            value={t.description}
+            onChange={(e) => set({ ...t, description: e.target.value })}
+          />
+        </Field>
+        <div className="builder-blocks">
+          {t.blocks.map((b, bi) => (
+            <section
+              className="builder-block"
+              key={b.id}
+              aria-label={`Block ${bi + 1}`}
+            >
+              <div className="block-heading">
+                <span className="step-number">
+                  {String(bi + 1).padStart(2, "0")}
+                </span>
+                <input
+                  aria-label={`Block ${bi + 1} Name`}
+                  required
+                  maxLength={100}
+                  value={b.name}
+                  onChange={(e) => updateBlock({ ...b, name: e.target.value })}
+                />
+                <div className="button-row">
+                  <button
+                    className="icon-btn"
+                    type="button"
+                    disabled={!bi}
+                    aria-label="Block nach oben"
+                    onClick={() => moveBlock(bi, -1)}
+                  >
+                    <ArrowUp size={16} />
+                  </button>
+                  <button
+                    className="icon-btn"
+                    type="button"
+                    disabled={bi === t.blocks.length - 1}
+                    aria-label="Block nach unten"
+                    onClick={() => moveBlock(bi, 1)}
+                  >
+                    <ArrowDown size={16} />
+                  </button>
+                  <button
+                    className="icon-btn danger"
+                    type="button"
+                    disabled={t.blocks.length === 1}
+                    aria-label="Block entfernen"
+                    onClick={() =>
+                      set({
+                        ...t,
+                        blocks: t.blocks.filter((x) => x.id !== b.id),
+                      })
+                    }
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+              <div className="two-col">
+                <Field label="Abschnitt">
+                  <select
+                    value={b.section}
+                    onChange={(e) =>
+                      updateBlock({
+                        ...b,
+                        section: e.target.value as WorkoutBlock["section"],
+                      })
+                    }
+                  >
+                    {sections.map((s) => (
+                      <option key={s}>{s}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Ausführungsmodus">
+                  <select
+                    value={b.mode}
+                    onChange={(e) =>
+                      updateBlock({
+                        ...b,
+                        mode: e.target.value as WorkoutBlock["mode"],
+                        work:
+                          e.target.value === "emom" && b.mode !== "emom"
+                            ? 60
+                            : b.work,
+                      })
+                    }
+                  >
+                    {modes.map((m) => (
+                      <option key={m} value={m}>
+                        {modeLabels[m]}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+              <p className="hint">{modeHelp[b.mode]}</p>
+              <div className="number-grid">
+                {b.mode !== "amrap" && (
+                  <Num
+                    label={b.mode === "sets" ? "Sätze je Übung" : "Durchgänge"}
+                    min={1}
+                    max={100}
+                    value={b.rounds}
+                    onChange={(rounds) => updateBlock({ ...b, rounds })}
+                  />
+                )}
+                {!["sets", "rounds"].includes(b.mode) && (
+                  <Num
+                    label={
+                      b.mode === "emom"
+                        ? "Intervall (Sek.)"
+                        : b.mode === "amrap"
+                          ? "Zeitlimit (Sek.)"
+                          : "Arbeit (Sek.)"
+                    }
+                    min={1}
+                    max={86400}
+                    value={b.work}
+                    onChange={(work) => updateBlock({ ...b, work })}
+                  />
+                )}
+                {!["emom", "amrap"].includes(b.mode) && (
+                  <Num
+                    label="Pause (Sek.)"
+                    max={3600}
+                    value={b.rest}
+                    onChange={(rest) => updateBlock({ ...b, rest })}
+                  />
+                )}
+              </div>
+              {b.exercises.map((p, pi) => {
+                const ex = exercises.find((e) => e.id === p.exerciseId)!;
+                const edit = (values: Partial<typeof p>) =>
+                  updateBlock({
+                    ...b,
+                    exercises: b.exercises.map((x) =>
+                      x.id === p.id ? { ...x, ...values } : x,
+                    ),
+                  });
+                const move = (dir: number) => {
+                  const list = [...b.exercises];
+                  [list[pi], list[pi + dir]] = [list[pi + dir], list[pi]];
+                  updateBlock({ ...b, exercises: list });
+                };
+                return (
+                  <div className="prescription" key={p.id}>
+                    <div className="prescription-head">
+                      <Field label={`Übung ${pi + 1}`}>
+                        <select
+                          aria-label={`Übung ${pi + 1} in Block ${bi + 1}`}
+                          value={p.exerciseId}
+                          onChange={(e) =>
+                            edit({
+                              exerciseId: e.target.value,
+                              load: 0,
+                              distance: null,
+                            })
+                          }
+                        >
+                          {exercises.map((e) => (
+                            <option value={e.id} key={e.id}>
+                              {e.name}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      <div className="button-row">
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          disabled={!pi}
+                          aria-label={`${ex.name} nach oben`}
+                          onClick={() => move(-1)}
+                        >
+                          <ArrowUp size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          disabled={pi === b.exercises.length - 1}
+                          aria-label={`${ex.name} nach unten`}
+                          onClick={() => move(1)}
+                        >
+                          <ArrowDown size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-btn danger"
+                          disabled={b.exercises.length === 1}
+                          aria-label={`${ex.name} entfernen`}
+                          onClick={() =>
+                            updateBlock({
+                              ...b,
+                              exercises: b.exercises.filter(
+                                (x) => x.id !== p.id,
+                              ),
+                            })
+                          }
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="number-grid">
+                      {(ex.metrics.includes("reps") || b.mode === "amrap") && (
+                        <Num
+                          label={b.mode === "amrap" ? "Reps je Runde" : "Reps"}
+                          min={1}
+                          value={p.reps}
+                          onChange={(reps) => edit({ reps })}
+                        />
+                      )}
+                      {ex.metrics.includes("load") && (
+                        <>
+                          <Num
+                            label="kg je Gewicht"
+                            value={p.load}
+                            step={0.5}
+                            onChange={(load) => edit({ load })}
+                          />
+                          <Field label="Gewichte">
+                            <select
+                              value={p.implements}
+                              onChange={(e) =>
+                                edit({
+                                  implements: Number(e.target.value) as 1 | 2,
+                                })
+                              }
+                            >
+                              <option value={1}>1 Gewicht</option>
+                              <option value={2}>2 Gewichte</option>
+                            </select>
+                          </Field>
+                        </>
+                      )}
+                      {ex.metrics.includes("distance") && (
+                        <Field label="Distanz (m, optional)">
+                          <input
+                            type="number"
+                            min={0}
+                            max={1000000}
+                            value={p.distance ?? ""}
+                            onChange={(e) =>
+                              edit({
+                                distance:
+                                  e.target.value === ""
+                                    ? null
+                                    : Number(e.target.value),
+                              })
+                            }
+                          />
+                        </Field>
+                      )}
+                    </div>
+                    <details>
+                      <summary>Seite, Tempo & weitere Vorgaben</summary>
+                      <div className="number-grid">
+                        <Field label="Seite">
+                          <select
+                            value={p.side}
+                            onChange={(e) =>
+                              edit({ side: e.target.value as typeof p.side })
+                            }
+                          >
+                            {["Beidseitig", "Links", "Rechts"].map((s) => (
+                              <option key={s}>{s}</option>
+                            ))}
+                          </select>
+                        </Field>
+                        <Field label="Tempo (z. B. 3–1–1)">
+                          <input
+                            maxLength={50}
+                            value={p.tempo}
+                            onChange={(e) => edit({ tempo: e.target.value })}
+                          />
+                        </Field>
+                        {(["rpe", "rir"] as const).map((key) => (
+                          <Field
+                            key={key}
+                            label={`Ziel-${key.toUpperCase()} (optional)`}
+                          >
+                            <input
+                              type="number"
+                              min={0}
+                              max={10}
+                              step={0.5}
+                              value={p[key] ?? ""}
+                              onChange={(e) =>
+                                edit({
+                                  [key]:
+                                    e.target.value === ""
+                                      ? null
+                                      : Number(e.target.value),
+                                })
+                              }
+                            />
+                          </Field>
+                        ))}
+                      </div>
+                      <Field label="Techniknotiz">
+                        <input
+                          value={p.notes}
+                          maxLength={2000}
+                          onChange={(e) => edit({ notes: e.target.value })}
+                        />
+                      </Field>
+                    </details>
+                  </div>
+                );
+              })}
+              <button
+                type="button"
+                className="btn subtle"
+                disabled={b.mode === "amrap" || b.exercises.length >= 20}
+                onClick={() =>
+                  updateBlock({
+                    ...b,
+                    exercises: [...b.exercises, prescription(exercises[0].id)],
+                  })
+                }
+              >
+                <Plus size={16} />
+                Übung hinzufügen
+              </button>
+              {b.exercises.length > 1 &&
+                !["emom", "amrap"].includes(b.mode) && (
+                  <Num
+                    label="Übergang zwischen Übungen (Sek.)"
+                    value={b.transition}
+                    max={600}
+                    onChange={(transition) => updateBlock({ ...b, transition })}
+                  />
+                )}
+            </section>
+          ))}
+        </div>
+        <button
+          type="button"
+          className="btn"
+          disabled={t.blocks.length >= 20}
+          onClick={() =>
+            set({ ...t, blocks: [...t.blocks, block(exercises[0].id)] })
+          }
+        >
+          <Plus size={17} />
+          Block hinzufügen
+        </button>
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="modal-actions sticky-actions">
+          <button type="button" className="btn" onClick={onClose}>
+            Verwerfen
+          </button>
+          <button type="submit" className="btn primary">
+            Workout speichern
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
