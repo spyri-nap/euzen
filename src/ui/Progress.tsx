@@ -18,6 +18,7 @@ import {
   summary,
 } from "../domain/analytics";
 import { Empty, Modal, Field, Num } from "./common";
+import { ExerciseTrends, PeriodComparison, WeeklyReview } from "./Insights";
 
 export function Progress({
   state,
@@ -34,7 +35,8 @@ export function Progress({
   const sessions = state.sessions.filter(
     (s) =>
       s.status !== "active" &&
-      (!cutoff || localDate(new Date(s.startedAt)) >= cutoff),
+      (!cutoff || localDate(new Date(s.startedAt)) >= cutoff) &&
+      localDate(new Date(s.startedAt)) <= localDate(),
   );
   const stats = summary(sessions);
   const distribution = coverage(sessions, "dimension");
@@ -70,6 +72,7 @@ export function Progress({
             onChange={(e) => setPeriod(e.target.value)}
           >
             <option value="all">Gesamter Zeitraum</option>
+            <option value="7">Letzte 7 Tage</option>
             <option value="28">Letzte 28 Tage</option>
             <option value="56">Letzte 56 Tage</option>
           </select>
@@ -101,6 +104,11 @@ export function Progress({
           detail="nur geeignete Last × Reps"
         />
       </div>
+      {period !== "all" && (
+        <PeriodComparison sessions={state.sessions} days={Number(period)} />
+      )}
+      <ExerciseTrends sessions={sessions} onSession={setDetail} />
+      <WeeklyReview state={state} />
       {sessions.length ? (
         <>
           <div className="two-col section-gap">

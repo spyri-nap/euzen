@@ -808,7 +808,7 @@ function Settings({
           Über dieses Grundgerüst
         </summary>
         <p>
-          Version 0.1 · Sprache Deutsch. Datenformat mit Schema-Versionierung.
+          Version 0.4 · Sprache Deutsch. Datenformat mit Schema-Versionierung.
           Vorlagen dienen der allgemeinen Trainingsplanung; passe sie an deine
           Erfahrung und deine Möglichkeiten an.
         </p>

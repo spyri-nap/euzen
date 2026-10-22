@@ -11,6 +11,7 @@ import {
 import { coachContext } from "../domain/analytics";
 import { type AppState } from "../domain/model";
 import { Field, MovementArt } from "./common";
+import { WeeklyReview } from "./Insights";
 
 export function Space({
   state,
@@ -54,6 +55,7 @@ export function Space({
         </div>
         <MovementArt small />
       </section>
+      <WeeklyReview state={state} onPlan={onPlan} />
       <div className="two-col section-gap">
         <section className="panel">
           <div className="section-head">
