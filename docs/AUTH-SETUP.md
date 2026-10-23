@@ -10,9 +10,25 @@ Node >=22.12 erforderlich. Vitest auf 4.1.12 aktualisiert, nachdem npm audit Sic
 
 Update 23.10.: Die folgende ursprüngliche Beschreibung ist überholt: `Account` ist jetzt in Einstellungen eingebunden, lazy geladen und nutzt die lokale, gitignorierte Testkonfiguration. INITIAL_SESSION und Auth-Änderungen werden abonniert; Abmeldung, OTP-Eingabe und Profilformular DE/EN sind implementiert. Profilantworten sind an die Lebensdauer der jeweiligen Nutzeransicht gebunden. Der lokale Trainingsbereich bleibt ausdrücklich unzugeordnet. CSP enthält ausschließlich die konkrete Supabase-Origin. Keine Trainingsspeicherumschaltung oder Synchronisierung; diese Meilensteine sind weiterhin offen. Vercel-Umgebungsvariablen wurden nicht gesetzt, keine Veröffentlichung. Browser-End-to-End-Abnahme und echter Versand sind noch nicht erfolgt; die bestehende Vorschau zeigte beim Nachsehen noch den alten Stand. 71 Unit-/Render-Tests, Typecheck und Build erfolgreich. Render-Tests ersetzen keine Interaktionstests.
 
-Service ist absichtlich noch nicht in App/Settings eingehängt. Daher keine sichtbare Anmeldung, keine Profilbearbeitung und keine neue Sessionrestoration in der Oberfläche. Keine lokalen Daten automatisch zugeordnet. `.env.example` wird noch nicht von einer App-Initialisierung gelesen. Kein Cloud-Sync oder Reset.
+## Interaktive Prüfung und konkreter Versandblocker
 
-Nächste Implementierung: Auth-Controller mit geschützter asynchroner Antwortverarbeitung, Konto-Gate und getrennte Trainingsspeicher einschließlich Editorentwürfen. Vorher keine Anmeldung neben scheinbar bereits zugeordneten Gastdaten anzeigen. Profile-UI vollständig DE/EN umsetzen. Anschließend Sync und Reset gemäß VERSION-0.6-PREPARATION.md.
+Am 23.10. im Browser geprüft: bestehende 127.0.0.1-Vorschau lädt die aktuelle Kontoansicht in Einstellungen. Server PID 74027 hat das erwartete Repository als Arbeitsverzeichnis; HTTP liefert Vite-Dev-HTML. Die sichtbare Versionsnummer 0.5 ist kein Nachweis für alten Code. Separater Ursprung `localhost:5173` startet leer (0 Übungen/Workouts/Sessions), zeigt die Einführung und die Kontoansicht. Ungültige E-Mail wird durch Browservalidierung vor Versand blockiert; Sprachwechsel zeigt die englische Kontoansicht. Dabei keine echten E-Mails aus der isolierten Ansicht versendet. Screenshot: outputs/account-english-check.png im übergeordneten Workspace.
+
+Öffentliche `/auth/v1/settings` antworten HTTP 200: E-Mail aktiv, Registrierung erlaubt, automatische Bestätigung deaktiviert. Keine Auskunft über SMTP oder Vorlagen über diesen Endpunkt.
+
+Nutzer meldet nach eigenem Versandversuch: Supabase-Mail zugestellt, aber Mail Confirmation statt Code. Zustellung ist damit nutzerbestätigt, OTP-Verifikation bleibt ungeprüft. Wahrscheinlicher Konfigurationsbruch: Bestätigungs-/OTP-Vorlage enthält noch keinen sichtbaren Token. Dashboard unter https://supabase.com/dashboard/project/yvxzcawjtyqcljuoyfeg/auth/templates verlangt Anmeldung. Connector bietet keinen Auth-Konfigurationszugriff. Keine Vorlage geändert und E-Mail-Bestätigung NICHT deaktiviert.
+
+Nach Dashboard-Anmeldung Vorlagen **Confirm sign up** und **Magic link or OTP** prüfen. Beide müssen für diesen Ablauf einen sichtbaren `{{ .Token }}` statt ausschließlich `{{ .ConfirmationURL }}` anbieten. Geeigneter minimaler Inhalt:
+
+```html
+<h2>Eúzēn · Dein Anmeldecode / Your sign-in code</h2>
+<p>Gib diesen Code in Eúzēn ein. / Enter this code in Eúzēn:</p>
+<p style="font-size:28px;letter-spacing:4px">{{ .Token }}</p>
+<p>Teile den Code nicht. / Do not share this code.</p>
+<p>Nicht angefordert? Ignoriere diese Nachricht. / If you did not request this, ignore this message.</p>
+```
+
+Dann nach Cooldown neuen Code anfordern; ausschließlich neueste Mail nutzen und Code direkt in der App eingeben. Kein Code im Chat, keine Wiederverwendung alter Tokens. Danach Profil anlegen, neu laden und abmelden prüfen. Für vollständigen Pfad fehlen weiterhin Trainingsspeicherumschaltung, Sync/Reset und Geräteabnahme.
 
 ## E-Mail-Konfiguration: vor End-to-End-Test prüfen
 
