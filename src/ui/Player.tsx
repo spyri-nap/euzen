@@ -1,0 +1,727 @@
+import { t as tr } from "../i18n";
+import { useEffect, useRef, useState } from "react";
+import {
+  ArrowRight,
+  Check,
+  ChevronLeft,
+  Pause,
+  Play,
+  Plus,
+  SkipForward,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import {
+  clock,
+  draftSchema,
+  formatDate,
+  modeLabels,
+  number,
+  resultSchema,
+  uid,
+  type AppState,
+  type SetResult,
+  type WorkoutSession,
+} from "../domain/model";
+import {
+  activeDuration,
+  elapsed,
+  extend,
+  finish,
+  freshTimer,
+  pause,
+  settle,
+  start,
+} from "../domain/timer";
+import { previousResult } from "../domain/analytics";
+import { Field, Modal, Num } from "./common";
+import { useWakeLock } from "./useWakeLock";
+import { advanceGuided, targetFor } from "../domain/guided";
+import { clockShift } from "../domain/clockGuard";
+
+export function Player({
+  state,
+  session: s,
+  update,
+  onExit,
+}: {
+  state: AppState;
+  session: WorkoutSession;
+  update: (fn: (s: AppState) => AppState) => void;
+  onExit: () => void;
+}) {
+  const [now, setNow] = useState(Date.now());
+  const wake = useWakeLock();
+  const [ending, setEnding] = useState(false);
+  const [error, setError] = useState("");
+  const [undo, setUndo] = useState<WorkoutSession | null>(null);
+  const audioRef = useRef<AudioContext | null>(null);
+  const latestSession = useRef(s);
+  latestSession.current = s;
+  const phase = s.phases[s.phaseIndex];
+  const b = s.snapshot.blocks.find((b) => b.id === phase.blockId)!;
+  const p = targetFor(
+    b,
+    b.exercises.find((p) => p.id === phase.prescriptionId)!,
+    phase.round,
+  );
+  const e = s.exercises.find((e) => e.id === phase.exerciseId)!;
+  const existing = s.results.find((r) => r.stepId === phase.id);
+  const draft = s.draft ?? {
+    reps: e.metrics.includes("reps") ? p.reps : 0,
+    load: p.load,
+    distance: p.distance,
+    rpe: null,
+    rir: null,
+    notes: "",
+    rounds: 0,
+    partial: 0,
+  };
+  const work = phase.kind === "work";
+  const timed = !phase.manual;
+  const ms = elapsed(s.timer, now);
+  const targetDuration = phase.duration + s.timer.extensionMs / 1000;
+  const remaining = Math.max(0, targetDuration - ms / 1000);
+  const previous = previousResult(state, s, e.id, p.id, b.id, phase.round);
+  const patch = (fn: (s: WorkoutSession) => WorkoutSession) =>
+    update((state) => ({
+      ...state,
+      sessions: state.sessions.map((x) =>
+        x.id === s.id && x.status === "active" ? fn(x) : x,
+      ),
+    }));
+  const editDraft = (values: Partial<typeof draft>) =>
+    patch((current) => ({
+      ...current,
+      draft: { ...(current.draft ?? draft), ...values },
+    }));
+  useEffect(() => {
+    let wall = Date.now(),
+      monotonic = performance.now();
+    const id = setInterval(() => {
+      const nextWall = Date.now(),
+        nextMono = performance.now();
+      const current = latestSession.current;
+      if (
+        current.timer.status === "running" &&
+        clockShift(nextWall - wall, nextMono - monotonic)
+      ) {
+        const safe = Math.max(current.timer.startedAt ?? wall, wall);
+        patch((session) => ({
+          ...session,
+          timer: pause(session.timer, safe),
+          activeMs: activeDuration(session, safe),
+          activeSince: null,
+        }));
+        setError(
+          "Zeitabweichung erkannt. Training vorsichtshalber pausiert. Prüfe deinen Stand vor dem Fortsetzen.",
+        );
+      }
+      wall = nextWall;
+      monotonic = nextMono;
+      setNow(nextWall);
+    }, 200);
+    return () => clearInterval(id);
+  }, []);
+  useEffect(() => {
+    if (s.timer.status !== "running" || !timed || remaining > 0) return;
+    if (
+      (b.guided && ["emom", "interval", "countdown"].includes(b.mode)) ||
+      phase.kind === "prepare"
+    ) {
+      patch((current) => advanceGuided(current, now));
+      if (state.preferences.audio && audioRef.current) {
+        const ctx = audioRef.current,
+          osc = ctx.createOscillator(),
+          gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.2);
+      }
+      return;
+    }
+    const expiry =
+      (s.timer.startedAt ?? now) +
+      Math.max(0, targetDuration * 1000 - s.timer.elapsedMs);
+    patch((current) => ({
+      ...current,
+      timer: settle(current.timer, phase.duration, false, now),
+      activeMs: activeDuration(current, expiry),
+      activeSince: null,
+      ...(phase.kind !== "work" &&
+      current.phaseIndex < current.phases.length - 1
+        ? {
+            phaseIndex: current.phaseIndex + 1,
+            timer: start(freshTimer(), now),
+            activeSince: now,
+            draft: null,
+          }
+        : {}),
+    }));
+    if (state.preferences.audio && audioRef.current) {
+      const ctx = audioRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
+      osc.frequency.value = 660;
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.3);
+    }
+    // The state machine performs one terminal transition per running phase.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remaining, s.timer.status, phase.id]);
+  const enableAudio = () => {
+    const enabled = !state.preferences.audio;
+    if (enabled) {
+      try {
+        audioRef.current ??= new AudioContext();
+        void audioRef.current.resume();
+      } catch {
+        setError("Audio ist in diesem Browser nicht verfügbar.");
+      }
+    }
+    update((state) => ({
+      ...state,
+      preferences: { ...state.preferences, audio: enabled },
+    }));
+  };
+  const toggle = () => {
+    const stamp = Date.now();
+    if (state.preferences.audio) {
+      try {
+        audioRef.current ??= new AudioContext();
+        void audioRef.current.resume();
+      } catch {
+        /* Visual timer remains available. */
+      }
+    }
+    patch((current) =>
+      current.timer.status === "running"
+        ? {
+            ...current,
+            timer: pause(current.timer, stamp),
+            activeMs: activeDuration(current, stamp),
+            activeSince: null,
+          }
+        : {
+            ...current,
+            timer: start(current.timer, stamp),
+            activeSince: current.timer.status === "expired" ? null : stamp,
+          },
+    );
+  };
+  const next = (skip = false) => {
+    if (!skip && work && s.timer.status === "idle") {
+      setError("Starte die Übung, bevor du sie bestätigst.");
+      return;
+    }
+    if (
+      !skip &&
+      work &&
+      timed &&
+      s.timer.status !== "expired" &&
+      b.mode !== "emom"
+    ) {
+      setError("Lass den Timer auslaufen oder überspringe diesen Schritt.");
+      return;
+    }
+    if (!skip && work && b.mode === "emom" && s.timer.status !== "expired") {
+      setError(
+        "Das Intervall läuft noch. Du kannst deine Reps jetzt vormerken.",
+      );
+      return;
+    }
+    const stamp = Date.now();
+    const check = draftSchema.safeParse(draft);
+    if (
+      !check.success ||
+      (b.mode === "amrap" &&
+        (draft.partial >= p.reps ||
+          draft.rounds * p.reps + draft.partial > 100000))
+    ) {
+      setError(
+        "Bitte prüfe deine Eingaben: ganze Reps/Runden, gültige Last und RPE/RIR zwischen 0 und 10. Eine Teilrunde enthält weniger als die vorgegebenen Reps.",
+      );
+      return;
+    }
+    const parsed = check.data;
+    setError("");
+    setUndo(
+      structuredClone({
+        ...s,
+        timer: pause(s.timer, stamp),
+        activeMs: activeDuration(s, stamp),
+        activeSince: null,
+      }),
+    );
+    patch((current) => {
+      if (current.phaseIndex !== s.phaseIndex) return current;
+      const result: SetResult = {
+        id: existing?.id ?? uid(),
+        stepId: phase.id,
+        blockId: b.id,
+        prescriptionId: p.id,
+        exerciseId: e.id,
+        round: phase.round,
+        reps:
+          b.mode === "amrap"
+            ? parsed.rounds * p.reps + parsed.partial
+            : parsed.reps,
+        load: parsed.load,
+        implements: p.implements,
+        seconds: Math.min(
+          86400,
+          Math.round(elapsed(current.timer, stamp) / 1000),
+        ),
+        distance: parsed.distance,
+        rir: parsed.rir,
+        rpe: parsed.rpe,
+        notes: parsed.notes,
+        roundsCompleted: b.mode === "amrap" ? parsed.rounds : 1,
+        skipped: skip,
+        pendingConfirmation: false,
+        recordedAt: stamp,
+      };
+      const results = work
+        ? [
+            ...current.results.filter((r) => r.stepId !== phase.id),
+            resultSchema.parse(result),
+          ]
+        : current.results;
+      const updated = {
+        ...current,
+        results,
+        draft: null,
+        activeMs: activeDuration(current, stamp),
+        activeSince: null,
+        timer: freshTimer(),
+      };
+      if (current.phaseIndex === current.phases.length - 1)
+        return finish(updated, !results.some((r) => r.skipped), stamp);
+      return {
+        ...updated,
+        phaseIndex: current.phaseIndex + 1,
+        timer: start(freshTimer(), stamp),
+        activeSince: stamp,
+      };
+    });
+  };
+  const nextPhase = s.phases[s.phaseIndex + 1];
+  const done = s.results.filter((r) => !r.skipped).length;
+  return (
+    <div className="player">
+      <div className="player-top">
+        <button className="btn subtle" onClick={onExit}>
+          <ChevronLeft size={18} />
+          {tr("Zur Übersicht")}
+        </button>
+        <span>{s.snapshot.name}</span>
+        <button
+          className="icon-btn"
+          aria-label={
+            state.preferences.audio
+              ? tr("Ton ausschalten")
+              : tr("Ton einschalten")
+          }
+          onClick={enableAudio}
+        >
+          {state.preferences.audio ? (
+            <Volume2 size={20} />
+          ) : (
+            <VolumeX size={20} />
+          )}
+        </button>
+      </div>
+      <div
+        className="session-progress"
+        aria-label={`Schritt ${s.phaseIndex + 1} von ${s.phases.length}`}
+      >
+        <div style={{ width: `${(s.phaseIndex / s.phases.length) * 100}%` }} />
+      </div>
+      <div className="button-row">
+        <button
+          className="btn small-btn"
+          disabled={!wake.supported}
+          aria-pressed={wake.enabled}
+          onClick={wake.toggle}
+        >
+          {wake.active
+            ? tr("Bildschirm bleibt wach")
+            : wake.enabled
+              ? tr("Wachhalten angefragt")
+              : tr("Bildschirm wach halten")}
+        </button>
+        <span className="hint">
+          {wake.message ||
+            (!wake.supported
+              ? tr("In diesem Browser nicht verfügbar.")
+              : tr(""))}
+        </span>
+      </div>
+      <div className="player-layout">
+        <section className="player-main">
+          <p className="eyebrow">
+            {b.section} · {tr(modeLabels[b.mode])} · {b.name}
+          </p>
+          <h1>
+            {work
+              ? e.name
+              : phase.kind === "prepare"
+                ? tr("Mach dich bereit.")
+                : phase.kind === "rest"
+                  ? tr("Zeit zum Durchatmen.")
+                  : tr("In Ruhe wechseln.")}
+          </h1>
+          <p className="player-cue">
+            {work
+              ? e.cue
+              : tr(
+                  "Lockere dich, atme ruhig und bereite dich auf die nächste Bewegung vor.",
+                )}
+          </p>
+          <div className="timer-display">
+            <span className="timer-meta">
+              {work
+                ? `Durchgang ${phase.round} / ${b.mode === "amrap" ? tr("1 Zeitfenster") : b.rounds}`
+                : tr("Erholung")}{" "}
+              {tr("· Schritt ")}
+              {s.phaseIndex + 1}/{s.phases.length}
+            </span>
+            <div
+              className={`timer-ring ${s.timer.status === "running" ? "running" : ""}`}
+              style={
+                {
+                  "--progress": timed
+                    ? `${(1 - remaining / targetDuration) * 100}%`
+                    : "0%",
+                } as React.CSSProperties
+              }
+            >
+              <span>{clock(Math.ceil(timed ? remaining : ms / 1000))}</span>
+              <small>
+                {s.timer.status === "expired"
+                  ? tr("Zeit geschafft")
+                  : s.timer.status === "paused"
+                    ? tr("Pausiert")
+                    : timed
+                      ? tr("Verbleibend")
+                      : tr("Deine Zeit")}
+              </small>
+            </div>
+            <div className="timer-controls">
+              <button
+                className="btn primary"
+                disabled={s.timer.status === "expired"}
+                onClick={toggle}
+              >
+                {s.timer.status === "running" ? (
+                  <Pause size={18} />
+                ) : (
+                  <Play size={18} />
+                )}{" "}
+                {s.timer.status === "running"
+                  ? tr("Pause")
+                  : s.timer.status === "paused"
+                    ? tr("Fortsetzen")
+                    : tr("Starten")}
+              </button>
+              <button
+                className="btn"
+                onClick={() =>
+                  patch((current) => ({
+                    ...current,
+                    timer: extend(current.timer, 30, Date.now()),
+                    activeMs: activeDuration(current, Date.now()),
+                    activeSince: null,
+                  }))
+                }
+                disabled={!timed || s.timer.status === "idle"}
+              >
+                <Plus size={16} />
+                {tr("30 s Zeit")}
+              </button>
+            </div>
+          </div>
+          {work && (
+            <div className="target-bar">
+              <span>{tr("Vorgabe")}</span>
+              <strong>
+                {e.metrics.includes("reps")
+                  ? `${p.reps} Reps`
+                  : `${b.work} Sekunden`}
+                {p.load > 0 ? ` · ${p.implements} × ${p.load} kg` : tr("")}
+                {p.distance !== null ? ` · ${p.distance} m` : tr("")}
+              </strong>
+              <small>
+                {tr(p.side)}
+                {p.tempo ? ` · Tempo ${p.tempo}` : tr("")}
+                {p.rpe !== null ? ` · RPE ${p.rpe}` : tr("")}
+                {p.rir !== null ? ` · RIR ${p.rir}` : tr("")}
+              </small>
+            </div>
+          )}
+          {p.notes && work && <p className="callout">{p.notes}</p>}
+          <p className="hint">
+            {b.guided
+              ? tr(
+                  "Zeitfenster laufen automatisch; Leistungen bitte nach der Einheit bestätigen.",
+                )
+              : tr(
+                  "Arbeitsphasen bestätigst du selbst; Pausen wechseln automatisch weiter.",
+                )}
+            {tr("Hintergrundsignale hängen vom Browser ab.")}
+          </p>
+        </section>
+        <aside className="player-log">
+          <p className="eyebrow">
+            {work ? tr("DEIN PROTOKOLL") : tr("ALS NÄCHSTES")}
+          </p>
+          {work ? (
+            <>
+              <h2>{tr("Wie lief es?")}</h2>
+              {b.guided &&
+                ["emom", "interval", "countdown"].includes(b.mode) && (
+                  <p className="callout">
+                    {tr(
+                      "Dieser Zeitblock läuft automatisch. Eingetragene Werte bleiben zunächst unbestätigt. Bestätige deine tatsächliche Leistung nach der Einheit unter Fortschritt → Ergebnis korrigieren.",
+                    )}
+                  </p>
+                )}
+              <p>{tr("Trage ein, was du tatsächlich geschafft hast.")}</p>
+              {b.mode === "amrap" ? (
+                <>
+                  <div className="round-counter">
+                    <button
+                      className="btn"
+                      aria-label={tr("Eine Runde weniger")}
+                      disabled={draft.rounds === 0}
+                      onClick={() => editDraft({ rounds: draft.rounds - 1 })}
+                    >
+                      −
+                    </button>
+                    <div>
+                      <strong>{draft.rounds}</strong>
+                      <span>{tr("volle Runden")}</span>
+                    </div>
+                    <button
+                      className="btn"
+                      aria-label={tr("Eine Runde mehr")}
+                      onClick={() => editDraft({ rounds: draft.rounds + 1 })}
+                    >
+                      +
+                    </button>
+                  </div>
+                  <Num
+                    label={tr("Zusätzliche Reps (Teilrunde)")}
+                    value={draft.partial}
+                    max={100000}
+                    onChange={(partial) => editDraft({ partial })}
+                  />
+                  <p className="hint">
+                    {tr("1 Runde = ")}
+                    {p.reps}
+                    {tr(" Reps. Gesamt:")}{" "}
+                    {draft.rounds * p.reps + draft.partial}
+                    {tr(" Reps.")}
+                  </p>
+                </>
+              ) : (
+                e.metrics.includes("reps") && (
+                  <Num
+                    label={tr("Tatsächliche Wiederholungen")}
+                    value={draft.reps}
+                    max={100000}
+                    onChange={(reps) => editDraft({ reps })}
+                  />
+                )
+              )}
+              {e.metrics.includes("load") && (
+                <Num
+                  label={`kg je Gewicht (${p.implements} Gewicht${p.implements === 2 ? tr("e") : tr("")})`}
+                  step={0.5}
+                  value={draft.load}
+                  onChange={(load) => editDraft({ load })}
+                />
+              )}
+              {e.metrics.includes("distance") && (
+                <Field label={tr("Tatsächliche Distanz (m)")}>
+                  <input
+                    type="number"
+                    min={0}
+                    value={draft.distance ?? ""}
+                    onChange={(e) =>
+                      editDraft({
+                        distance:
+                          e.target.value === "" ? null : Number(e.target.value),
+                      })
+                    }
+                  />
+                </Field>
+              )}
+              <div className="two-col">
+                {(["rpe", "rir"] as const).map((key) => (
+                  <Field key={key} label={`${key.toUpperCase()} (optional)`}>
+                    <input
+                      type="number"
+                      min={0}
+                      max={10}
+                      step={0.5}
+                      value={draft[key] ?? ""}
+                      onChange={(e) =>
+                        editDraft({
+                          [key]:
+                            e.target.value === ""
+                              ? null
+                              : Number(e.target.value),
+                        })
+                      }
+                    />
+                  </Field>
+                ))}
+              </div>
+              <p className="hint">
+                {tr(
+                  "RPE: empfundene Anstrengung (0–10). RIR: geschätzte zusätzliche Wiederholungen.",
+                )}
+              </p>
+              <Field label={tr("Notiz")}>
+                <textarea
+                  maxLength={2000}
+                  value={draft.notes}
+                  onChange={(e) => editDraft({ notes: e.target.value })}
+                />
+              </Field>
+              {previous ? (
+                <div className="previous">
+                  <small>
+                    {tr("Letztes vergleichbares Training ·")}{" "}
+                    {formatDate(previous.date)}
+                  </small>
+                  <strong>
+                    {previous.result.reps}
+                    {tr(" Reps")}
+                    {previous.result.load
+                      ? ` · ${number(previous.result.load, 1)} kg`
+                      : tr("")}
+                    {previous.result.rpe !== null
+                      ? ` · RPE ${previous.result.rpe}`
+                      : tr("")}
+                  </strong>
+                </div>
+              ) : (
+                <p className="hint">
+                  {tr("Dein erster Referenzpunkt für dieses Protokoll.")}
+                </p>
+              )}
+              {b.mode === "emom" && s.timer.status === "running" && (
+                <p className="callout">
+                  {tr(
+                    "Reps eingetragen? Nutze die Restzeit als Pause. Bestätige nach Ablauf des Intervalls.",
+                  )}
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <h2>
+                {nextPhase
+                  ? s.exercises.find((e) => e.id === nextPhase.exerciseId)?.name
+                  : tr("Geschafft")}
+              </h2>
+              <p>
+                {done}
+                {tr(" Arbeitsschritte protokolliert.")}
+              </p>
+            </>
+          )}
+          {error && (
+            <p className="error" role="alert">
+              {tr(error)}
+            </p>
+          )}
+          {undo && (
+            <button
+              className="btn full"
+              onClick={() => {
+                patch(() => undo);
+                setUndo(null);
+              }}
+            >
+              {tr("Letzten Schritt rückgängig machen")}
+            </button>
+          )}
+          <button
+            className="btn primary full"
+            onClick={() => next()}
+            disabled={
+              s.timer.status === "idle" ||
+              (timed && s.timer.status !== "expired")
+            }
+          >
+            {s.phaseIndex === s.phases.length - 1 ? (
+              <Check size={18} />
+            ) : (
+              <ArrowRight size={18} />
+            )}{" "}
+            {s.phaseIndex === s.phases.length - 1
+              ? tr("Workout speichern")
+              : work
+                ? tr("Bestätigen & weiter")
+                : tr("Weiter")}
+          </button>
+          <button className="btn subtle full" onClick={() => next(true)}>
+            <SkipForward size={16} />
+            {tr("Schritt überspringen")}
+          </button>
+          <button
+            className="text-button muted full"
+            onClick={() => setEnding(true)}
+          >
+            {tr("Training vorzeitig beenden")}
+          </button>
+        </aside>
+      </div>
+      {ending && (
+        <Modal
+          title={tr("Training für heute beenden?")}
+          onClose={() => setEnding(false)}
+        >
+          <p>
+            {tr(
+              "Deine bisherigen Ergebnisse bleiben erhalten. Die Einheit wird als unvollständig gespeichert.",
+            )}
+          </p>
+          <Field label={tr("Notiz zur Einheit")}>
+            <textarea
+              value={s.notes}
+              maxLength={2000}
+              onChange={(e) =>
+                patch((current) => ({ ...current, notes: e.target.value }))
+              }
+            />
+          </Field>
+          <div className="modal-actions">
+            <button className="btn" onClick={() => setEnding(false)}>
+              {tr("Weitertrainieren")}
+            </button>
+            <button
+              className="btn primary"
+              onClick={() => {
+                patch((current) => finish(current, false, Date.now()));
+                setEnding(false);
+              }}
+            >
+              {tr("Ergebnisse speichern")}
+            </button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
