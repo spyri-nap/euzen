@@ -36,6 +36,7 @@ import { previousResult } from "../domain/analytics";
 import { Field, Modal, Num } from "./common";
 import { useWakeLock } from "./useWakeLock";
 import { advanceGuided, targetFor } from "../domain/guided";
+import { clockShift } from "../domain/clockGuard";
 
 export function Player({
   state,
@@ -54,6 +55,8 @@ export function Player({
   const [error, setError] = useState("");
   const [undo, setUndo] = useState<WorkoutSession | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
+  const latestSession = useRef(s);
+  latestSession.current = s;
   const phase = s.phases[s.phaseIndex];
   const b = s.snapshot.blocks.find((b) => b.id === phase.blockId)!;
   const p = targetFor(
@@ -92,7 +95,31 @@ export function Player({
       draft: { ...(current.draft ?? draft), ...values },
     }));
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 200);
+    let wall = Date.now(),
+      monotonic = performance.now();
+    const id = setInterval(() => {
+      const nextWall = Date.now(),
+        nextMono = performance.now();
+      const current = latestSession.current;
+      if (
+        current.timer.status === "running" &&
+        clockShift(nextWall - wall, nextMono - monotonic)
+      ) {
+        const safe = Math.max(current.timer.startedAt ?? wall, wall);
+        patch((session) => ({
+          ...session,
+          timer: pause(session.timer, safe),
+          activeMs: activeDuration(session, safe),
+          activeSince: null,
+        }));
+        setError(
+          "Zeitabweichung erkannt. Training vorsichtshalber pausiert. Prüfe deinen Stand vor dem Fortsetzen.",
+        );
+      }
+      wall = nextWall;
+      monotonic = nextMono;
+      setNow(nextWall);
+    }, 200);
     return () => clearInterval(id);
   }, []);
   useEffect(() => {

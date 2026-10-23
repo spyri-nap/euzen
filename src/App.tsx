@@ -40,6 +40,7 @@ import { Planning } from "./ui/Planning";
 import { Progress } from "./ui/Progress";
 import { Player } from "./ui/Player";
 import { Space } from "./ui/Space";
+import { MobileApp } from "./ui/MobileApp";
 
 type View = "today" | "plan" | "library" | "progress" | "space" | "train";
 const nav = [
@@ -63,7 +64,7 @@ export function App() {
   useEffect(() => {
     if (previousActive.current && !active && view === "train") {
       setView("progress");
-      setToast("Deine Einheit wurde gespeichert. Jeder Schritt zählt.");
+      setToast("Einheit beendet. Bitte den lokalen Speicherstatus prüfen.");
     }
     previousActive.current = active?.id;
   }, [active, view]);
@@ -189,6 +190,9 @@ export function App() {
             </span>
           </div>
         </header>
+        <MobileApp
+          blocked={Boolean(active || editor || settings || saving || error)}
+        />
         {error && (
           <div className="notice error" role="alert">
             {error}
@@ -808,7 +812,7 @@ function Settings({
           Über dieses Grundgerüst
         </summary>
         <p>
-          Version 0.4 · Sprache Deutsch. Datenformat mit Schema-Versionierung.
+          Version 0.5 · Sprache Deutsch. Datenformat mit Schema-Versionierung.
           Vorlagen dienen der allgemeinen Trainingsplanung; passe sie an deine
           Erfahrung und deine Möglichkeiten an.
         </p>

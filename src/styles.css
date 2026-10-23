@@ -2806,6 +2806,49 @@ details[open] summary {
     font-size: 45px;
   }
 }
+.mobile-help {
+  margin: 12px 24px;
+  font-size: 13px;
+}
+.mobile-help summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 12px 0;
+}
+.mobile-help button {
+  min-height: 44px;
+  margin: 4px;
+}
+.mobile-help textarea {
+  width: 100%;
+  min-height: 100px;
+  display: block;
+}
+@media (max-width: 760px) {
+  .app-shell {
+    min-height: 100dvh;
+  }
+  .sidebar {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .main-content {
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  }
+  .btn,
+  .text-button,
+  .icon-button {
+    min-height: 44px;
+  }
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+    scroll-margin-bottom: 110px;
+  }
+  .mobile-help {
+    margin: 12px;
+  }
+}
 .table-scroll {
   overflow-x: auto;
 }

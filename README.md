@@ -1,5 +1,7 @@
 # Eúzēn · εὖ ζῆν
 
+Neuer Teststand: **0.5** · [Mobile PWA, Updates, Installation und offene Abnahme](docs/VERSION-0.5.md). Diese Hinweise ersetzen die betreffenden älteren Angaben unten. Noch keine öffentliche Handy-Testadresse bereitgestellt.
+
 Aktueller Entwicklungsstand: **0.4**. [Version 0.2](docs/VERSION-0.2.md) ergänzt Entwürfe und Ergebniskorrekturen; [Version 0.3](docs/VERSION-0.3.md) ergänzt automatische Zeitblöcke, Vorbereitung und Satzvorgaben; [Version 0.4](docs/VERSION-0.4.md) ergänzt Zeitraumvergleiche, Übungsverläufe und persönliche Wochenrückblicke. Diese Versionshinweise ersetzen die betreffenden ursprünglichen 0.1-Regeln unten.
 
 Ein persönlicher Raum für funktionelles Training und ein gutes Leben in Bewegung. Das Grundgerüst bildet einen vollständigen Ablauf ab: Übungen auswählen, Workout konfigurieren, Woche planen, trainieren und echte Ergebnisse auswerten.

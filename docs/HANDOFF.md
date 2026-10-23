@@ -1,5 +1,7 @@
 # Übergabe · Arbeit pausiert am 22.10.2026
 
+Fortsetzung 23.10.2026: Version 0.5 als lokale PWA-Testbasis implementiert. Siehe VERSION-0.5.md für Update-Strategie, Installationshilfe und offene Abnahme. Hosting-Ziel/Zugangsschutz noch zu klären. Keine Veröffentlichung erfolgt. P1 und echte Gerätetests nicht abgeschlossen.
+
 ## Gesicherter Stand
 
 - Eúzēn Version 0.4: lokale React-/TypeScript-/Vite-App für funktionelles Training und Longevity.
