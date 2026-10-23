@@ -43,6 +43,7 @@ import { Progress } from "./ui/Progress";
 import { Player } from "./ui/Player";
 import { Space } from "./ui/Space";
 import { MobileApp } from "./ui/MobileApp";
+import { Onboarding } from "./ui/Onboarding";
 
 type View = "today" | "plan" | "library" | "progress" | "space" | "train";
 const nav = [
@@ -250,6 +251,15 @@ export function App() {
         >
           <fieldset className="app-fieldset" disabled={readonly}>
             {view === "today" && (
+              <Onboarding
+                state={state}
+                update={update}
+                onLibrary={() => navigate("library")}
+                onWorkout={() => setEditor("new")}
+                onPlan={() => navigate("plan")}
+              />
+            )}
+            {view === "today" && (
               <Today
                 state={state}
                 update={update}
@@ -295,7 +305,28 @@ export function App() {
           </span>
         </footer>
       </div>
-      {editor && (
+      {editor && state.exercises.length === 0 && (
+        <Modal
+          title={tr("Erste Übung anlegen")}
+          onClose={() => setEditor(null)}
+        >
+          <p>
+            {tr(
+              "Für dein erstes Workout brauchst du zunächst eine eigene Übung.",
+            )}
+          </p>
+          <button
+            className="btn primary"
+            onClick={() => {
+              setEditor(null);
+              navigate("library");
+            }}
+          >
+            {tr("Zur Übungsbibliothek")}
+          </button>
+        </Modal>
+      )}
+      {editor && state.exercises.length > 0 && (
         <Editor
           template={editor === "new" ? undefined : editor}
           exercises={state.exercises}
@@ -767,6 +798,18 @@ function Settings({
           </option>
         </select>
       </Field>
+      <button
+        className="btn"
+        onClick={() => {
+          update((s) => ({
+            ...s,
+            preferences: { ...s.preferences, onboardingStep: 0 },
+          }));
+          onClose();
+        }}
+      >
+        {tr("Einführung erneut öffnen")}
+      </button>
       <p className="hint">
         {tr("Eigene Namen und Notizen werden nicht übersetzt.")}
       </p>

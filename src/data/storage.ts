@@ -1,6 +1,6 @@
 import { openDB } from "idb";
 import { validateState, type AppState } from "../domain/model";
-import { initialState } from "../domain/seed";
+import { emptyState } from "../domain/empty";
 
 const connection = () =>
   openDB("euzen", 1, {
@@ -12,7 +12,7 @@ export async function loadState(): Promise<AppState> {
   const db = await connection();
   try {
     const stored = await db.get("state", "main");
-    return stored === undefined ? initialState() : validateState(stored);
+    return stored === undefined ? emptyState() : validateState(stored);
   } finally {
     db.close();
   }

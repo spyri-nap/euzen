@@ -210,7 +210,7 @@ export const sessionSchema = z.object({
 });
 export const stateSchema = z.object({
   schemaVersion: z.literal(1),
-  exercises: z.array(exerciseSchema).min(1).max(10000),
+  exercises: z.array(exerciseSchema).max(10000),
   templates: z.array(templateSchema).max(1000),
   weeklyPlans: z.array(weeklyPlanSchema).max(1000),
   scheduled: z.array(scheduledSchema).max(20000),
@@ -218,6 +218,7 @@ export const stateSchema = z.object({
   preferences: z.object({
     audio: z.boolean(),
     language: z.enum(["de", "en"]).default("de"),
+    onboardingStep: z.number().int().min(0).max(5).default(5),
   }),
   checkins: z
     .array(

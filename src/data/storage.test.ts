@@ -4,6 +4,14 @@ import { loadState, parseBackup, saveState } from "./storage";
 import { initialState } from "../domain/seed";
 
 describe("IndexedDB persistence", () => {
+  it("starts without example data on a new installation", async () => {
+    const s = await loadState();
+    expect(s.exercises).toEqual([]);
+    expect(s.templates).toEqual([]);
+    expect(s.scheduled).toEqual([]);
+    expect(s.sessions).toEqual([]);
+    expect(parseBackup(JSON.stringify(s))).toEqual(s);
+  });
   it("preserves data across loads and never writes an invalid import", async () => {
     const state = initialState();
     state.templates[0].name = "Mein gespeichertes Training";

@@ -278,7 +278,7 @@ export function initialState(): AppState {
       },
     ],
     sessions: [],
-    preferences: { audio: false, language: "de" },
+    preferences: { audio: false, language: "de", onboardingStep: 5 },
     checkins: [],
   };
 }

@@ -1,4 +1,9 @@
 export const english: Record<string, string> = {
+  "Erste Übung anlegen": "Create first exercise",
+  "Für dein erstes Workout brauchst du zunächst eine eigene Übung.":
+    "Create an exercise before building your first workout.",
+  "Zur Übungsbibliothek": "Open exercise library",
+  "Einführung erneut öffnen": "Reopen introduction",
   "Check-in bearbeiten": "Edit check-in",
   "Warm-up": "Warm-up",
   Hauptteil: "Main section",
