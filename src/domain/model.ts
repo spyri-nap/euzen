@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getLocale } from "../i18n";
 
 export const dimensions = [
   "Kraft",
@@ -214,7 +215,10 @@ export const stateSchema = z.object({
   weeklyPlans: z.array(weeklyPlanSchema).max(1000),
   scheduled: z.array(scheduledSchema).max(20000),
   sessions: z.array(sessionSchema).max(10000),
-  preferences: z.object({ audio: z.boolean() }),
+  preferences: z.object({
+    audio: z.boolean(),
+    language: z.enum(["de", "en"]).default("de"),
+  }),
   checkins: z
     .array(
       z.object({
@@ -255,12 +259,12 @@ export function formatDate(
   date: string,
   options: Intl.DateTimeFormatOptions = { day: "numeric", month: "long" },
 ) {
-  return new Intl.DateTimeFormat("de-DE", options).format(
+  return new Intl.DateTimeFormat(getLocale(), options).format(
     new Date(`${date}T12:00:00`),
   );
 }
 export const number = (n: number, digits = 0) =>
-  n.toLocaleString("de-DE", { maximumFractionDigits: digits });
+  n.toLocaleString(getLocale(), { maximumFractionDigits: digits });
 export const clock = (s: number) =>
   `${Math.floor(Math.max(s, 0) / 60)
     .toString()

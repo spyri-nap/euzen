@@ -1,3 +1,4 @@
+import { t as tr } from "../i18n";
 import { useState } from "react";
 import { ArrowUpRight, Check, Clock3, Dumbbell, Activity } from "lucide-react";
 import {
@@ -61,20 +62,22 @@ export function Progress({
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">DEIN WEG IN BEWEGUNG</p>
-          <h1>Fortschritt hat viele Formen.</h1>
-          <p>Verstehe deinen Rhythmus. Ein Training nach dem anderen.</p>
+          <p className="eyebrow">{tr("DEIN WEG IN BEWEGUNG")}</p>
+          <h1>{tr("Fortschritt hat viele Formen.")}</h1>
+          <p>
+            {tr("Verstehe deinen Rhythmus. Ein Training nach dem anderen.")}
+          </p>
         </div>
         <label className="filter">
           <select
-            aria-label="Auswertungszeitraum"
+            aria-label={tr("Auswertungszeitraum")}
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
           >
-            <option value="all">Gesamter Zeitraum</option>
-            <option value="7">Letzte 7 Tage</option>
-            <option value="28">Letzte 28 Tage</option>
-            <option value="56">Letzte 56 Tage</option>
+            <option value="all">{tr("Gesamter Zeitraum")}</option>
+            <option value="7">{tr("Letzte 7 Tage")}</option>
+            <option value="28">{tr("Letzte 28 Tage")}</option>
+            <option value="56">{tr("Letzte 56 Tage")}</option>
           </select>
         </label>
       </div>
@@ -82,25 +85,25 @@ export function Progress({
         <Stat
           icon={<Check size={19} />}
           value={String(stats.complete)}
-          label="Abgeschlossene Workouts"
+          label={tr("Abgeschlossene Workouts")}
           detail={`${stats.incomplete} unvollständig`}
         />
         <Stat
           icon={<Clock3 size={19} />}
           value={`${number(stats.minutes, 1)} min`}
-          label="Trainingszeit"
+          label={tr("Trainingszeit")}
           detail="inkl. laufender Pausen"
         />
         <Stat
           icon={<Activity size={19} />}
           value={String(stats.days)}
-          label="Aktive Trainingstage"
+          label={tr("Aktive Trainingstage")}
           detail={`${stats.results} Arbeitsschritte`}
         />
         <Stat
           icon={<Dumbbell size={19} />}
           value={stats.volume === null ? "—" : `${number(stats.volume)} kg`}
-          label="Protokollierte Volumenlast"
+          label={tr("Protokollierte Volumenlast")}
           detail="nur geeignete Last × Reps"
         />
       </div>
@@ -113,16 +116,17 @@ export function Progress({
         <>
           <div className="two-col section-gap">
             <section className="panel">
-              <p className="eyebrow">DEIN BEWEGUNGSPROFIL</p>
-              <h2>Was du trainiert hast</h2>
+              <p className="eyebrow">{tr("DEIN BEWEGUNGSPROFIL")}</p>
+              <h2>{tr("Was du trainiert hast")}</h2>
               <p className="hint">
-                Protokollierte Arbeitsschritte nach Dimension. Dauer und
-                Belastung können sich unterscheiden.
+                {tr(
+                  "Protokollierte Arbeitsschritte nach Dimension. Dauer und Belastung können sich unterscheiden.",
+                )}
               </p>
               <div className="bars">
                 {dimensions.map((d) => (
-                  <div className="bar-row" key={d}>
-                    <span>{d}</span>
+                  <div className="bar-row" key={tr(d)}>
+                    <span>{tr(d)}</span>
                     <div>
                       <i
                         style={{
@@ -143,27 +147,27 @@ export function Progress({
               </div>
             </section>
             <section className="panel rhythm-panel">
-              <p className="eyebrow">KONSISTENZ</p>
-              <h2>Deine eingeplanten Einheiten</h2>
+              <p className="eyebrow">{tr("KONSISTENZ")}</p>
+              <h2>{tr("Deine eingeplanten Einheiten")}</h2>
               <div className="big-ratio">
                 {linked}
                 <span> / {planned}</span>
               </div>
               <p>
-                Bis heute fällige Einträge im Plan, davon vollständig
-                abgeschlossen. Ungeplante Workouts zählen zusätzlich in deiner
-                Gesamtbilanz.
+                {tr(
+                  "Bis heute fällige Einträge im Plan, davon vollständig abgeschlossen. Ungeplante Workouts zählen zusätzlich in deiner Gesamtbilanz.",
+                )}
               </p>
               <div className="callout">
-                Jede Einheit ist ein neuer Referenzpunkt. Für sinnvolle
-                Vergleiche bleiben Übung, Variante und Protokoll möglichst
-                ähnlich.
+                {tr(
+                  "Jede Einheit ist ein neuer Referenzpunkt. Für sinnvolle Vergleiche bleiben Übung, Variante und Protokoll möglichst ähnlich.",
+                )}
               </div>
             </section>
           </div>
           <div className="section-head section-gap">
-            <h2>Deine Trainingsgeschichte</h2>
-            <span className="muted">Neueste zuerst</span>
+            <h2>{tr("Deine Trainingsgeschichte")}</h2>
+            <span className="muted">{tr("Neueste zuerst")}</span>
           </div>
           <div className="history-list">
             {[...sessions]
@@ -184,15 +188,16 @@ export function Progress({
                       <small>
                         {formatDate(localDate(new Date(s.startedAt)))} ·{" "}
                         {s.status === "complete"
-                          ? "Abgeschlossen"
-                          : "Unvollständig"}
+                          ? tr("Abgeschlossen")
+                          : tr("Unvollständig")}
                       </small>
                     </span>
                     <span className="history-value">
-                      {number(summaryData.minutes, 1)} Min.
+                      {number(summaryData.minutes, 1)}
+                      {tr(" Min.")}
                       <small>
                         {s.results.filter((r) => !r.skipped).length}{" "}
-                        Arbeitsschritte
+                        {tr("Arbeitsschritte")}
                       </small>
                     </span>
                     <ArrowUpRight size={20} />
@@ -203,14 +208,16 @@ export function Progress({
         </>
       ) : (
         <Empty
-          title="Hier wächst deine Geschichte."
-          text="Nach deinem ersten Training siehst du echte Ergebnisse und persönliche Referenzpunkte. Auch eine unvollständige Einheit zählt zu deiner Geschichte."
+          title={tr("Hier wächst deine Geschichte.")}
+          text={tr(
+            "Nach deinem ersten Training siehst du echte Ergebnisse und persönliche Referenzpunkte. Auch eine unvollständige Einheit zählt zu deiner Geschichte.",
+          )}
         />
       )}
       <p className="footnote">
-        Volumenlast = Zusatzgewicht je Gewicht × Anzahl der Gewichte ×
-        tatsächliche Wiederholungen. Keine Körpergewichts-Schätzungen. „—“
-        bedeutet: keine geeigneten Daten.
+        {tr(
+          "Volumenlast = Zusatzgewicht je Gewicht × Anzahl der Gewichte × tatsächliche Wiederholungen. Keine Körpergewichts-Schätzungen. „—“ bedeutet: keine geeigneten Daten.",
+        )}
       </p>
       {detail && (
         <Modal
@@ -220,7 +227,9 @@ export function Progress({
         >
           <p className="eyebrow">
             {formatDate(localDate(new Date(detail.startedAt)))} ·{" "}
-            {detail.status === "complete" ? "Abgeschlossen" : "Unvollständig"}
+            {detail.status === "complete"
+              ? tr("Abgeschlossen")
+              : tr("Unvollständig")}
           </p>
           <div className="result-list">
             {detail.results.map((r) => {
@@ -238,54 +247,70 @@ export function Progress({
                 <div className="result-item" key={r.id}>
                   <h4>
                     {e.name}{" "}
-                    <span className="muted">· Durchgang {r.round}</span>
+                    <span className="muted">
+                      {tr("· Durchgang ")}
+                      {r.round}
+                    </span>
                   </h4>
                   <button
                     className="btn small-btn"
                     onClick={() => setEditing(r)}
                   >
-                    Ergebnis korrigieren
+                    {tr("Ergebnis korrigieren")}
                   </button>
                   {r.skipped ? (
                     <p>
                       {r.pendingConfirmation
-                        ? "Zeitfenster beendet · tatsächliche Ausführung noch bestätigen"
-                        : "Übersprungen"}
+                        ? tr(
+                            "Zeitfenster beendet · tatsächliche Ausführung noch bestätigen",
+                          )
+                        : tr("Übersprungen")}
                     </p>
                   ) : (
                     <>
                       <p>
-                        {e.metrics.includes("reps") ? `${r.reps} Reps · ` : ""}
-                        {r.load > 0 ? `${r.implements} × ${r.load} kg · ` : ""}
-                        {r.seconds} Sek.
-                        {r.distance !== null ? ` · ${r.distance} m` : ""}
+                        {e.metrics.includes("reps")
+                          ? `${r.reps} Reps · `
+                          : tr("")}
+                        {r.load > 0
+                          ? `${r.implements} × ${r.load} kg · `
+                          : tr("")}
+                        {r.seconds}
+                        {tr(" Sek.")}
+                        {r.distance !== null ? ` · ${r.distance} m` : tr("")}
                         {volume !== null
                           ? ` · ${number(volume)} kg Volumenlast`
-                          : ""}
-                        {r.rpe !== null ? ` · RPE ${r.rpe}` : ""}
-                        {r.rir !== null ? ` · RIR ${r.rir}` : ""}
+                          : tr("")}
+                        {r.rpe !== null ? ` · RPE ${r.rpe}` : tr("")}
+                        {r.rir !== null ? ` · RIR ${r.rir}` : tr("")}
                       </p>
                       {previous ? (
                         <p className="comparison">
-                          Vergleich {formatDate(previous.date)}:{" "}
-                          {previous.result.reps} Reps
+                          {tr("Vergleich ")}
+                          {formatDate(previous.date)}: {previous.result.reps}
+                          {tr(" Reps")}
                           {previous.result.load
                             ? ` · ${previous.result.load} kg`
-                            : ""}
+                            : tr("")}
                           {previous.result.rpe !== null
                             ? ` · RPE ${previous.result.rpe}`
-                            : ""}
-                          . Aktuell{" "}
-                          {r.reps - previous.result.reps >= 0 ? "+" : ""}
-                          {r.reps - previous.result.reps} Reps bei{" "}
+                            : tr("")}
+                          {tr(". Aktuell")}{" "}
+                          {r.reps - previous.result.reps >= 0
+                            ? tr("+")
+                            : tr("")}
+                          {r.reps - previous.result.reps}
+                          {tr(" Reps bei")}{" "}
                           {r.load === previous.result.load
-                            ? "gleicher"
-                            : "veränderter"}{" "}
-                          Last.
+                            ? tr("gleicher")
+                            : tr("veränderter")}{" "}
+                          {tr("Last.")}
                         </p>
                       ) : (
                         <p className="hint">
-                          Keine frühere Einheit mit vergleichbarem Protokoll.
+                          {tr(
+                            "Keine frühere Einheit mit vergleichbarem Protokoll.",
+                          )}
                         </p>
                       )}
                       {r.notes && <p>{r.notes}</p>}
@@ -342,7 +367,7 @@ function Correction({
   const [draft, set] = useState(result);
   const [error, setError] = useState("");
   return (
-    <Modal title="Trainingsergebnis korrigieren" onClose={onClose}>
+    <Modal title={tr("Trainingsergebnis korrigieren")} onClose={onClose}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -363,8 +388,9 @@ function Correction({
         }}
       >
         <p>
-          Die Auswertung wird neu berechnet. Die ursprüngliche Workout-Vorlage
-          bleibt erhalten.
+          {tr(
+            "Die Auswertung wird neu berechnet. Die ursprüngliche Workout-Vorlage bleibt erhalten.",
+          )}
         </p>
         {(result.pendingConfirmation || result.skipped) && (
           <label className="checkbox-row">
@@ -380,23 +406,23 @@ function Correction({
                 })
               }
             />
-            Ich habe diesen Arbeitsschritt tatsächlich absolviert.
+            {tr("Ich habe diesen Arbeitsschritt tatsächlich absolviert.")}
           </label>
         )}
         <Num
-          label="Tatsächliche Reps"
+          label={tr("Tatsächliche Reps")}
           value={draft.reps}
           max={100000}
           onChange={(reps) => set({ ...draft, reps })}
         />
         <Num
-          label="kg je Gewicht"
+          label={tr("kg je Gewicht")}
           value={draft.load}
           step={0.5}
           onChange={(load) => set({ ...draft, load })}
         />
         <Num
-          label="Dauer (Sekunden)"
+          label={tr("Dauer (Sekunden)")}
           value={draft.seconds}
           max={86400}
           onChange={(seconds) => set({ ...draft, seconds })}
@@ -418,17 +444,17 @@ function Correction({
             />
           </Field>
         ))}
-        <Field label="Notiz">
+        <Field label={tr("Notiz")}>
           <textarea
             value={draft.notes}
             maxLength={2000}
             onChange={(e) => set({ ...draft, notes: e.target.value })}
           />
         </Field>
-        {error && <p role="alert">{error}</p>}
+        {error && <p role="alert">{tr(error)}</p>}
         <div className="modal-actions">
           <button className="btn primary" type="submit">
-            Korrektur speichern
+            {tr("Korrektur speichern")}
           </button>
         </div>
       </form>

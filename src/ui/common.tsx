@@ -1,3 +1,4 @@
+import { t as tr } from "../i18n";
 import { useEffect, useRef, type ReactNode } from "react";
 import { X, ArrowRight, Leaf } from "lucide-react";
 
@@ -30,7 +31,11 @@ export function Modal({
     >
       <div className="modal-head">
         <h2>{title}</h2>
-        <button className="icon-btn" aria-label="Schließen" onClick={onClose}>
+        <button
+          className="icon-btn"
+          aria-label={tr("Schließen")}
+          onClick={onClose}
+        >
           <X size={20} />
         </button>
       </div>

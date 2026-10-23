@@ -1,3 +1,4 @@
+import { t as tr } from "../i18n";
 import { useEffect, useState } from "react";
 type InstallEvent = Event & { prompt: () => Promise<void> };
 export function MobileApp({ blocked }: { blocked: boolean }) {
@@ -91,14 +92,15 @@ export function MobileApp({ blocked }: { blocked: boolean }) {
   }, []);
   return (
     <details className="mobile-help panel">
-      <summary>App installieren, Updates & Hilfe · Version 0.5</summary>
+      <summary>{tr("App installieren, Updates & Hilfe · Version 0.5")}</summary>
       <p role="status">
-        {online ? "Netzwerk laut Gerät verfügbar" : "Offline"} · {status}
+        {online ? tr("Netzwerk laut Gerät verfügbar") : tr("Offline")} ·{" "}
+        {tr(status)}
       </p>
       <p>
-        iPhone: Diese feste App-Adresse in Safari öffnen → Teilen → Zum
-        Home-Bildschirm → als Web-App öffnen. Android: Browsermenü → App
-        installieren / Zum Startbildschirm. Bezeichnungen können abweichen.
+        {tr(
+          "iPhone: Diese feste App-Adresse in Safari öffnen → Teilen → Zum Home-Bildschirm → als Web-App öffnen. Android: Browsermenü → App installieren / Zum Startbildschirm. Bezeichnungen können abweichen.",
+        )}
       </p>
       {install && (
         <button
@@ -108,7 +110,7 @@ export function MobileApp({ blocked }: { blocked: boolean }) {
             setInstall(undefined);
           }}
         >
-          App installieren
+          {tr("App installieren")}
         </button>
       )}
       <button
@@ -128,23 +130,24 @@ export function MobileApp({ blocked }: { blocked: boolean }) {
           }
         }}
       >
-        Nach Updates suchen
+        {tr("Nach Updates suchen")}
       </button>
       {blocked && (
         <p>
-          Training, Speichern, Fehler oder Editor aktiv: erst abschließen. Kein
-          erzwungener Neustart.
+          {tr(
+            "Training, Speichern, Fehler oder Editor aktiv: erst abschließen. Kein erzwungener Neustart.",
+          )}
         </p>
       )}
       <p>
-        Updates werden absichtlich erst aktiviert, wenn alle bisherigen
-        App-Fenster geschlossen sind. Das schützt auch andere Tabs. Kein
-        automatischer Neustart und kein Geräte-Sync.
+        {tr(
+          "Updates werden absichtlich erst aktiviert, wenn alle bisherigen App-Fenster geschlossen sind. Das schützt auch andere Tabs. Kein automatischer Neustart und kein Geräte-Sync.",
+        )}
       </p>
       <p>
-        Trainingsdaten liegen unverschlüsselt im lokalen Browserprofil. In
-        Einstellungen & Daten ein JSON-Backup exportieren. Daten können bei
-        Browserbereinigung oder Speichermangel verloren gehen.
+        {tr(
+          "Trainingsdaten liegen unverschlüsselt im lokalen Browserprofil. In Einstellungen & Daten ein JSON-Backup exportieren. Daten können bei Browserbereinigung oder Speichermangel verloren gehen.",
+        )}
       </p>
       <button
         className="btn"
@@ -160,16 +163,16 @@ export function MobileApp({ blocked }: { blocked: boolean }) {
           }
         }}
       >
-        Dauerhafte Speicherung anfragen
+        {tr("Dauerhafte Speicherung anfragen")}
       </button>
-      <p>{storage}</p>
+      <p>{tr(storage)}</p>
       <p>
-        Bei Displaysperre und App-Wechsel sind Ton und Hintergrundausführung
-        nicht garantiert. Wiederhergestellte Zeitfenster bestätigen keine
-        ausgeführten Übungen.
+        {tr(
+          "Bei Displaysperre und App-Wechsel sind Ton und Hintergrundausführung nicht garantiert. Wiederhergestellte Zeitfenster bestätigen keine ausgeführten Übungen.",
+        )}
       </p>
       <label>
-        Technische Diagnose – zum freiwilligen Kopieren
+        {tr("Technische Diagnose – zum freiwilligen Kopieren")}
         <textarea
           readOnly
           value={`Eúzēn 0.5.0\nBuild: ${build}\nService Worker: ${registration ? "registriert" : "nicht registriert"}\nNetzwerk: ${online ? "online" : "offline"}`}

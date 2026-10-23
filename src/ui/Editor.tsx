@@ -1,3 +1,4 @@
+import { t as tr } from "../i18n";
 import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import {
@@ -88,7 +89,7 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
   };
   return (
     <Modal
-      title={template ? "Workout bearbeiten" : "Dein Workout gestalten"}
+      title={template ? tr("Workout bearbeiten") : tr("Dein Workout gestalten")}
       onClose={onClose}
       wide
     >
@@ -120,11 +121,13 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
         }}
       >
         <p role="status" className="hint">
-          {draftNotice} Schließen erhält den Entwurf; „Workout speichern“
-          übernimmt ihn in deine Vorlagen.
+          {tr(draftNotice)}
+          {tr(
+            " Schließen erhält den Entwurf; „Workout speichern“ übernimmt ihn in deine Vorlagen.",
+          )}
         </p>
         <div className="two-col">
-          <Field label="Workout-Name">
+          <Field label={tr("Workout-Name")}>
             <input
               required
               value={t.name}
@@ -132,7 +135,7 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
               onChange={(e) => set({ ...t, name: e.target.value })}
             />
           </Field>
-          <Field label="Fokus">
+          <Field label={tr("Fokus")}>
             <select
               value={t.dimension}
               onChange={(e) =>
@@ -143,12 +146,14 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
               }
             >
               {dimensions.map((d) => (
-                <option key={d}>{d}</option>
+                <option key={d} value={d}>
+                  {tr(d)}
+                </option>
               ))}
             </select>
           </Field>
         </div>
-        <Field label="Beschreibung / persönliche Hinweise">
+        <Field label={tr("Beschreibung / persönliche Hinweise")}>
           <textarea
             maxLength={2000}
             value={t.description}
@@ -178,7 +183,7 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                     className="icon-btn"
                     type="button"
                     disabled={!bi}
-                    aria-label="Block nach oben"
+                    aria-label={tr("Block nach oben")}
                     onClick={() => moveBlock(bi, -1)}
                   >
                     <ArrowUp size={16} />
@@ -187,7 +192,7 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                     className="icon-btn"
                     type="button"
                     disabled={bi === t.blocks.length - 1}
-                    aria-label="Block nach unten"
+                    aria-label={tr("Block nach unten")}
                     onClick={() => moveBlock(bi, 1)}
                   >
                     <ArrowDown size={16} />
@@ -196,7 +201,7 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                     className="icon-btn danger"
                     type="button"
                     disabled={t.blocks.length === 1}
-                    aria-label="Block entfernen"
+                    aria-label={tr("Block entfernen")}
                     onClick={() =>
                       set({
                         ...t,
@@ -209,7 +214,7 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                 </div>
               </div>
               <div className="two-col">
-                <Field label="Abschnitt">
+                <Field label={tr("Abschnitt")}>
                   <select
                     value={b.section}
                     onChange={(e) =>
@@ -220,11 +225,13 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                     }
                   >
                     {sections.map((s) => (
-                      <option key={s}>{s}</option>
+                      <option key={s} value={s}>
+                        {tr(s)}
+                      </option>
                     ))}
                   </select>
                 </Field>
-                <Field label="Ausführungsmodus">
+                <Field label={tr("Ausführungsmodus")}>
                   <select
                     value={b.mode}
                     onChange={(e) =>
@@ -240,7 +247,7 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                   >
                     {modes.map((m) => (
                       <option key={m} value={m}>
-                        {modeLabels[m]}
+                        {tr(modeLabels[m])}
                       </option>
                     ))}
                   </select>
@@ -248,7 +255,7 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
               </div>
               <p className="hint">{modeHelp[b.mode]}</p>
               <Num
-                label="Vorbereitung (Sek.)"
+                label={tr("Vorbereitung (Sek.)")}
                 value={b.prepare}
                 max={120}
                 onChange={(prepare) => updateBlock({ ...b, prepare })}
@@ -262,21 +269,24 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                       updateBlock({ ...b, guided: e.target.checked })
                     }
                   />
-                  Zeitblock automatisch durchlaufen
+                  {tr("Zeitblock automatisch durchlaufen")}
                 </label>
               )}
               {b.guided && (
                 <p className="hint">
-                  Zeitfenster laufen auch ohne Bestätigung weiter. Tatsächliche
-                  Leistungen bestätigst du anschließend in der
-                  Trainingsgeschichte. Unbestätigte Schritte zählen nicht zur
-                  Leistung.
+                  {tr(
+                    "Zeitfenster laufen auch ohne Bestätigung weiter. Tatsächliche Leistungen bestätigst du anschließend in der Trainingsgeschichte. Unbestätigte Schritte zählen nicht zur Leistung.",
+                  )}
                 </p>
               )}
               <div className="number-grid">
                 {b.mode !== "amrap" && (
                   <Num
-                    label={b.mode === "sets" ? "Sätze je Übung" : "Durchgänge"}
+                    label={
+                      b.mode === "sets"
+                        ? tr("Sätze je Übung")
+                        : tr("Durchgänge")
+                    }
                     min={1}
                     max={100}
                     value={b.rounds}
@@ -287,10 +297,10 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                   <Num
                     label={
                       b.mode === "emom"
-                        ? "Intervall (Sek.)"
+                        ? tr("Intervall (Sek.)")
                         : b.mode === "amrap"
-                          ? "Zeitlimit (Sek.)"
-                          : "Arbeit (Sek.)"
+                          ? tr("Zeitlimit (Sek.)")
+                          : tr("Arbeit (Sek.)")
                     }
                     min={1}
                     max={86400}
@@ -300,7 +310,7 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                 )}
                 {!["emom", "amrap"].includes(b.mode) && (
                   <Num
-                    label="Pause (Sek.)"
+                    label={tr("Pause (Sek.)")}
                     max={3600}
                     value={b.rest}
                     onChange={(rest) => updateBlock({ ...b, rest })}
@@ -383,7 +393,11 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                     <div className="number-grid">
                       {(ex.metrics.includes("reps") || b.mode === "amrap") && (
                         <Num
-                          label={b.mode === "amrap" ? "Reps je Runde" : "Reps"}
+                          label={
+                            b.mode === "amrap"
+                              ? tr("Reps je Runde")
+                              : tr("Reps")
+                          }
                           min={1}
                           value={p.reps}
                           onChange={(reps) => edit({ reps })}
@@ -392,12 +406,12 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                       {ex.metrics.includes("load") && (
                         <>
                           <Num
-                            label="kg je Gewicht"
+                            label={tr("kg je Gewicht")}
                             value={p.load}
                             step={0.5}
                             onChange={(load) => edit({ load })}
                           />
-                          <Field label="Gewichte">
+                          <Field label={tr("Gewichte")}>
                             <select
                               value={p.implements}
                               onChange={(e) =>
@@ -406,14 +420,14 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                                 })
                               }
                             >
-                              <option value={1}>1 Gewicht</option>
-                              <option value={2}>2 Gewichte</option>
+                              <option value={1}>{tr("1 Gewicht")}</option>
+                              <option value={2}>{tr("2 Gewichte")}</option>
                             </select>
                           </Field>
                         </>
                       )}
                       {ex.metrics.includes("distance") && (
-                        <Field label="Distanz (m, optional)">
+                        <Field label={tr("Distanz (m, optional)")}>
                           <input
                             type="number"
                             min={0}
@@ -433,7 +447,9 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                     </div>
                     {["sets", "rounds"].includes(b.mode) && (
                       <details>
-                        <summary>Individuelle Vorgaben je Satz / Runde</summary>
+                        <summary>
+                          {tr("Individuelle Vorgaben je Satz / Runde")}
+                        </summary>
                         {Array.from(
                           { length: Math.min(b.rounds, 100) },
                           (_, i) => {
@@ -485,21 +501,23 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                       </details>
                     )}
                     <details>
-                      <summary>Seite, Tempo & weitere Vorgaben</summary>
+                      <summary>{tr("Seite, Tempo & weitere Vorgaben")}</summary>
                       <div className="number-grid">
-                        <Field label="Seite">
+                        <Field label={tr("Seite")}>
                           <select
-                            value={p.side}
+                            value={tr(p.side)}
                             onChange={(e) =>
                               edit({ side: e.target.value as typeof p.side })
                             }
                           >
                             {["Beidseitig", "Links", "Rechts"].map((s) => (
-                              <option key={s}>{s}</option>
+                              <option key={s} value={s}>
+                                {tr(s)}
+                              </option>
                             ))}
                           </select>
                         </Field>
-                        <Field label="Tempo (z. B. 3–1–1)">
+                        <Field label={tr("Tempo (z. B. 3–1–1)")}>
                           <input
                             maxLength={50}
                             value={p.tempo}
@@ -529,7 +547,7 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                           </Field>
                         ))}
                       </div>
-                      <Field label="Techniknotiz">
+                      <Field label={tr("Techniknotiz")}>
                         <input
                           value={p.notes}
                           maxLength={2000}
@@ -552,12 +570,12 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
                 }
               >
                 <Plus size={16} />
-                Übung hinzufügen
+                {tr("Übung hinzufügen")}
               </button>
               {b.exercises.length > 1 &&
                 !["emom", "amrap"].includes(b.mode) && (
                   <Num
-                    label="Übergang zwischen Übungen (Sek.)"
+                    label={tr("Übergang zwischen Übungen (Sek.)")}
                     value={b.transition}
                     max={600}
                     onChange={(transition) => updateBlock({ ...b, transition })}
@@ -575,19 +593,19 @@ export function Editor({ template, exercises, onClose, onSave }: Props) {
           }
         >
           <Plus size={17} />
-          Block hinzufügen
+          {tr("Block hinzufügen")}
         </button>
         {error && (
           <p className="error" role="alert">
-            {error}
+            {tr(error)}
           </p>
         )}
         <div className="modal-actions sticky-actions">
           <button type="button" className="btn" onClick={onClose}>
-            Schließen · Entwurf behalten
+            {tr("Schließen · Entwurf behalten")}
           </button>
           <button type="submit" className="btn primary">
-            Workout speichern
+            {tr("Workout speichern")}
           </button>
         </div>
       </form>

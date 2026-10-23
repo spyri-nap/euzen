@@ -1,3 +1,4 @@
+import { t as tr } from "../i18n";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
@@ -318,13 +319,15 @@ export function Player({
       <div className="player-top">
         <button className="btn subtle" onClick={onExit}>
           <ChevronLeft size={18} />
-          Zur Übersicht
+          {tr("Zur Übersicht")}
         </button>
         <span>{s.snapshot.name}</span>
         <button
           className="icon-btn"
           aria-label={
-            state.preferences.audio ? "Ton ausschalten" : "Ton einschalten"
+            state.preferences.audio
+              ? tr("Ton ausschalten")
+              : tr("Ton einschalten")
           }
           onClick={enableAudio}
         >
@@ -349,41 +352,46 @@ export function Player({
           onClick={wake.toggle}
         >
           {wake.active
-            ? "Bildschirm bleibt wach"
+            ? tr("Bildschirm bleibt wach")
             : wake.enabled
-              ? "Wachhalten angefragt"
-              : "Bildschirm wach halten"}
+              ? tr("Wachhalten angefragt")
+              : tr("Bildschirm wach halten")}
         </button>
         <span className="hint">
           {wake.message ||
-            (!wake.supported ? "In diesem Browser nicht verfügbar." : "")}
+            (!wake.supported
+              ? tr("In diesem Browser nicht verfügbar.")
+              : tr(""))}
         </span>
       </div>
       <div className="player-layout">
         <section className="player-main">
           <p className="eyebrow">
-            {b.section} · {modeLabels[b.mode]} · {b.name}
+            {b.section} · {tr(modeLabels[b.mode])} · {b.name}
           </p>
           <h1>
             {work
               ? e.name
               : phase.kind === "prepare"
-                ? "Mach dich bereit."
+                ? tr("Mach dich bereit.")
                 : phase.kind === "rest"
-                  ? "Zeit zum Durchatmen."
-                  : "In Ruhe wechseln."}
+                  ? tr("Zeit zum Durchatmen.")
+                  : tr("In Ruhe wechseln.")}
           </h1>
           <p className="player-cue">
             {work
               ? e.cue
-              : "Lockere dich, atme ruhig und bereite dich auf die nächste Bewegung vor."}
+              : tr(
+                  "Lockere dich, atme ruhig und bereite dich auf die nächste Bewegung vor.",
+                )}
           </p>
           <div className="timer-display">
             <span className="timer-meta">
               {work
-                ? `Durchgang ${phase.round} / ${b.mode === "amrap" ? "1 Zeitfenster" : b.rounds}`
-                : "Erholung"}{" "}
-              · Schritt {s.phaseIndex + 1}/{s.phases.length}
+                ? `Durchgang ${phase.round} / ${b.mode === "amrap" ? tr("1 Zeitfenster") : b.rounds}`
+                : tr("Erholung")}{" "}
+              {tr("· Schritt ")}
+              {s.phaseIndex + 1}/{s.phases.length}
             </span>
             <div
               className={`timer-ring ${s.timer.status === "running" ? "running" : ""}`}
@@ -398,12 +406,12 @@ export function Player({
               <span>{clock(Math.ceil(timed ? remaining : ms / 1000))}</span>
               <small>
                 {s.timer.status === "expired"
-                  ? "Zeit geschafft"
+                  ? tr("Zeit geschafft")
                   : s.timer.status === "paused"
-                    ? "Pausiert"
+                    ? tr("Pausiert")
                     : timed
-                      ? "Verbleibend"
-                      : "Deine Zeit"}
+                      ? tr("Verbleibend")
+                      : tr("Deine Zeit")}
               </small>
             </div>
             <div className="timer-controls">
@@ -418,10 +426,10 @@ export function Player({
                   <Play size={18} />
                 )}{" "}
                 {s.timer.status === "running"
-                  ? "Pause"
+                  ? tr("Pause")
                   : s.timer.status === "paused"
-                    ? "Fortsetzen"
-                    : "Starten"}
+                    ? tr("Fortsetzen")
+                    : tr("Starten")}
               </button>
               <button
                 className="btn"
@@ -436,57 +444,62 @@ export function Player({
                 disabled={!timed || s.timer.status === "idle"}
               >
                 <Plus size={16} />
-                30 s Zeit
+                {tr("30 s Zeit")}
               </button>
             </div>
           </div>
           {work && (
             <div className="target-bar">
-              <span>Vorgabe</span>
+              <span>{tr("Vorgabe")}</span>
               <strong>
                 {e.metrics.includes("reps")
                   ? `${p.reps} Reps`
                   : `${b.work} Sekunden`}
-                {p.load > 0 ? ` · ${p.implements} × ${p.load} kg` : ""}
-                {p.distance !== null ? ` · ${p.distance} m` : ""}
+                {p.load > 0 ? ` · ${p.implements} × ${p.load} kg` : tr("")}
+                {p.distance !== null ? ` · ${p.distance} m` : tr("")}
               </strong>
               <small>
-                {p.side}
-                {p.tempo ? ` · Tempo ${p.tempo}` : ""}
-                {p.rpe !== null ? ` · RPE ${p.rpe}` : ""}
-                {p.rir !== null ? ` · RIR ${p.rir}` : ""}
+                {tr(p.side)}
+                {p.tempo ? ` · Tempo ${p.tempo}` : tr("")}
+                {p.rpe !== null ? ` · RPE ${p.rpe}` : tr("")}
+                {p.rir !== null ? ` · RIR ${p.rir}` : tr("")}
               </small>
             </div>
           )}
           {p.notes && work && <p className="callout">{p.notes}</p>}
           <p className="hint">
             {b.guided
-              ? "Zeitfenster laufen automatisch; Leistungen bitte nach der Einheit bestätigen."
-              : "Arbeitsphasen bestätigst du selbst; Pausen wechseln automatisch weiter."}
-            Hintergrundsignale hängen vom Browser ab.
+              ? tr(
+                  "Zeitfenster laufen automatisch; Leistungen bitte nach der Einheit bestätigen.",
+                )
+              : tr(
+                  "Arbeitsphasen bestätigst du selbst; Pausen wechseln automatisch weiter.",
+                )}
+            {tr("Hintergrundsignale hängen vom Browser ab.")}
           </p>
         </section>
         <aside className="player-log">
-          <p className="eyebrow">{work ? "DEIN PROTOKOLL" : "ALS NÄCHSTES"}</p>
+          <p className="eyebrow">
+            {work ? tr("DEIN PROTOKOLL") : tr("ALS NÄCHSTES")}
+          </p>
           {work ? (
             <>
-              <h2>Wie lief es?</h2>
+              <h2>{tr("Wie lief es?")}</h2>
               {b.guided &&
                 ["emom", "interval", "countdown"].includes(b.mode) && (
                   <p className="callout">
-                    Dieser Zeitblock läuft automatisch. Eingetragene Werte
-                    bleiben zunächst unbestätigt. Bestätige deine tatsächliche
-                    Leistung nach der Einheit unter Fortschritt → Ergebnis
-                    korrigieren.
+                    {tr(
+                      "Dieser Zeitblock läuft automatisch. Eingetragene Werte bleiben zunächst unbestätigt. Bestätige deine tatsächliche Leistung nach der Einheit unter Fortschritt → Ergebnis korrigieren.",
+                    )}
                   </p>
                 )}
-              <p>Trage ein, was du tatsächlich geschafft hast.</p>
+              <p>{tr("Trage ein, was du tatsächlich geschafft hast.")}</p>
               {b.mode === "amrap" ? (
                 <>
                   <div className="round-counter">
                     <button
                       className="btn"
-                      aria-label="Eine Runde weniger"
+                      aria-label={tr("Eine Runde weniger")}
                       disabled={draft.rounds === 0}
                       onClick={() => editDraft({ rounds: draft.rounds - 1 })}
                     >
@@ -494,31 +507,34 @@ export function Player({
                     </button>
                     <div>
                       <strong>{draft.rounds}</strong>
-                      <span>volle Runden</span>
+                      <span>{tr("volle Runden")}</span>
                     </div>
                     <button
                       className="btn"
-                      aria-label="Eine Runde mehr"
+                      aria-label={tr("Eine Runde mehr")}
                       onClick={() => editDraft({ rounds: draft.rounds + 1 })}
                     >
                       +
                     </button>
                   </div>
                   <Num
-                    label="Zusätzliche Reps (Teilrunde)"
+                    label={tr("Zusätzliche Reps (Teilrunde)")}
                     value={draft.partial}
                     max={100000}
                     onChange={(partial) => editDraft({ partial })}
                   />
                   <p className="hint">
-                    1 Runde = {p.reps} Reps. Gesamt:{" "}
-                    {draft.rounds * p.reps + draft.partial} Reps.
+                    {tr("1 Runde = ")}
+                    {p.reps}
+                    {tr(" Reps. Gesamt:")}{" "}
+                    {draft.rounds * p.reps + draft.partial}
+                    {tr(" Reps.")}
                   </p>
                 </>
               ) : (
                 e.metrics.includes("reps") && (
                   <Num
-                    label="Tatsächliche Wiederholungen"
+                    label={tr("Tatsächliche Wiederholungen")}
                     value={draft.reps}
                     max={100000}
                     onChange={(reps) => editDraft({ reps })}
@@ -527,14 +543,14 @@ export function Player({
               )}
               {e.metrics.includes("load") && (
                 <Num
-                  label={`kg je Gewicht (${p.implements} Gewicht${p.implements === 2 ? "e" : ""})`}
+                  label={`kg je Gewicht (${p.implements} Gewicht${p.implements === 2 ? tr("e") : tr("")})`}
                   step={0.5}
                   value={draft.load}
                   onChange={(load) => editDraft({ load })}
                 />
               )}
               {e.metrics.includes("distance") && (
-                <Field label="Tatsächliche Distanz (m)">
+                <Field label={tr("Tatsächliche Distanz (m)")}>
                   <input
                     type="number"
                     min={0}
@@ -570,10 +586,11 @@ export function Player({
                 ))}
               </div>
               <p className="hint">
-                RPE: empfundene Anstrengung (0–10). RIR: geschätzte zusätzliche
-                Wiederholungen.
+                {tr(
+                  "RPE: empfundene Anstrengung (0–10). RIR: geschätzte zusätzliche Wiederholungen.",
+                )}
               </p>
-              <Field label="Notiz">
+              <Field label={tr("Notiz")}>
                 <textarea
                   maxLength={2000}
                   value={draft.notes}
@@ -583,28 +600,30 @@ export function Player({
               {previous ? (
                 <div className="previous">
                   <small>
-                    Letztes vergleichbares Training ·{" "}
+                    {tr("Letztes vergleichbares Training ·")}{" "}
                     {formatDate(previous.date)}
                   </small>
                   <strong>
-                    {previous.result.reps} Reps
+                    {previous.result.reps}
+                    {tr(" Reps")}
                     {previous.result.load
                       ? ` · ${number(previous.result.load, 1)} kg`
-                      : ""}
+                      : tr("")}
                     {previous.result.rpe !== null
                       ? ` · RPE ${previous.result.rpe}`
-                      : ""}
+                      : tr("")}
                   </strong>
                 </div>
               ) : (
                 <p className="hint">
-                  Dein erster Referenzpunkt für dieses Protokoll.
+                  {tr("Dein erster Referenzpunkt für dieses Protokoll.")}
                 </p>
               )}
               {b.mode === "emom" && s.timer.status === "running" && (
                 <p className="callout">
-                  Reps eingetragen? Nutze die Restzeit als Pause. Bestätige nach
-                  Ablauf des Intervalls.
+                  {tr(
+                    "Reps eingetragen? Nutze die Restzeit als Pause. Bestätige nach Ablauf des Intervalls.",
+                  )}
                 </p>
               )}
             </>
@@ -613,14 +632,17 @@ export function Player({
               <h2>
                 {nextPhase
                   ? s.exercises.find((e) => e.id === nextPhase.exerciseId)?.name
-                  : "Geschafft"}
+                  : tr("Geschafft")}
               </h2>
-              <p>{done} Arbeitsschritte protokolliert.</p>
+              <p>
+                {done}
+                {tr(" Arbeitsschritte protokolliert.")}
+              </p>
             </>
           )}
           {error && (
             <p className="error" role="alert">
-              {error}
+              {tr(error)}
             </p>
           )}
           {undo && (
@@ -631,7 +653,7 @@ export function Player({
                 setUndo(null);
               }}
             >
-              Letzten Schritt rückgängig machen
+              {tr("Letzten Schritt rückgängig machen")}
             </button>
           )}
           <button
@@ -648,33 +670,34 @@ export function Player({
               <ArrowRight size={18} />
             )}{" "}
             {s.phaseIndex === s.phases.length - 1
-              ? "Workout speichern"
+              ? tr("Workout speichern")
               : work
-                ? "Bestätigen & weiter"
-                : "Weiter"}
+                ? tr("Bestätigen & weiter")
+                : tr("Weiter")}
           </button>
           <button className="btn subtle full" onClick={() => next(true)}>
             <SkipForward size={16} />
-            Schritt überspringen
+            {tr("Schritt überspringen")}
           </button>
           <button
             className="text-button muted full"
             onClick={() => setEnding(true)}
           >
-            Training vorzeitig beenden
+            {tr("Training vorzeitig beenden")}
           </button>
         </aside>
       </div>
       {ending && (
         <Modal
-          title="Training für heute beenden?"
+          title={tr("Training für heute beenden?")}
           onClose={() => setEnding(false)}
         >
           <p>
-            Deine bisherigen Ergebnisse bleiben erhalten. Die Einheit wird als
-            unvollständig gespeichert.
+            {tr(
+              "Deine bisherigen Ergebnisse bleiben erhalten. Die Einheit wird als unvollständig gespeichert.",
+            )}
           </p>
-          <Field label="Notiz zur Einheit">
+          <Field label={tr("Notiz zur Einheit")}>
             <textarea
               value={s.notes}
               maxLength={2000}
@@ -685,7 +708,7 @@ export function Player({
           </Field>
           <div className="modal-actions">
             <button className="btn" onClick={() => setEnding(false)}>
-              Weitertrainieren
+              {tr("Weitertrainieren")}
             </button>
             <button
               className="btn primary"
@@ -694,7 +717,7 @@ export function Player({
                 setEnding(false);
               }}
             >
-              Ergebnisse speichern
+              {tr("Ergebnisse speichern")}
             </button>
           </div>
         </Modal>

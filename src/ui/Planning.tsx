@@ -1,3 +1,4 @@
+import { t as tr } from "../i18n";
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -41,13 +42,13 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">DEIN PERSÖNLICHER RHYTHMUS</p>
-          <h1>Raum für Bewegung.</h1>
-          <p>Plane deine Woche so, wie sie zu deinem Leben passt.</p>
+          <p className="eyebrow">{tr("DEIN PERSÖNLICHER RHYTHMUS")}</p>
+          <h1>{tr("Raum für Bewegung.")}</h1>
+          <p>{tr("Plane deine Woche so, wie sie zu deinem Leben passt.")}</p>
         </div>
         <button className="btn primary" onClick={() => onEdit()}>
           <Plus size={18} />
-          Workout erstellen
+          {tr("Workout erstellen")}
         </button>
       </div>
       <section className="panel week-planner">
@@ -56,12 +57,12 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
             <p className="eyebrow">
               {formatDate(week)} – {formatDate(addDays(week, 6))}
             </p>
-            <h2>Deine Trainingswoche</h2>
+            <h2>{tr("Deine Trainingswoche")}</h2>
           </div>
           <div className="button-row">
             <button
               className="icon-btn"
-              aria-label="Vorherige Woche"
+              aria-label={tr("Vorherige Woche")}
               onClick={() => {
                 setWeek(addDays(week, -7));
                 setCopied(false);
@@ -70,11 +71,11 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
               <ArrowLeft size={18} />
             </button>
             <button className="btn small-btn" onClick={() => setWeek(monday())}>
-              Heute
+              {tr("Heute")}
             </button>
             <button
               className="icon-btn"
-              aria-label="Nächste Woche"
+              aria-label={tr("Nächste Woche")}
               onClick={() => {
                 setWeek(addDays(week, 7));
                 setCopied(false);
@@ -84,11 +85,11 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
             </button>
           </div>
         </div>
-        <Field label="Name dieser Woche">
+        <Field label={tr("Name dieser Woche")}>
           <input
             maxLength={100}
             value={plan?.name ?? ""}
-            placeholder="z. B. Meine Balance-Woche"
+            placeholder={tr("z. B. Meine Balance-Woche")}
             onChange={(e) =>
               update((s) => ({
                 ...s,
@@ -119,7 +120,7 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
               <div className="planner-day-title">
                 <span>{formatDate(day, { weekday: "short" })}</span>
                 <strong>{formatDate(day, { day: "numeric" })}</strong>
-                {day === localDate() && <small>Heute</small>}
+                {day === localDate() && <small>{tr("Heute")}</small>}
               </div>
               {state.scheduled
                 .filter((p) => p.date === day)
@@ -140,20 +141,23 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
                     >
                       <span className="tag">
                         {complete
-                          ? "Abgeschlossen"
+                          ? tr("Abgeschlossen")
                           : attempted
-                            ? "Teilweise trainiert"
+                            ? tr("Teilweise trainiert")
                             : day < localDate() && p.kind === "workout"
-                              ? "Offen · vergangen"
+                              ? tr("Offen · vergangen")
                               : p.kind === "rest"
-                                ? "Erholung"
+                                ? tr("Erholung")
                                 : p.kind === "mobility"
-                                  ? "Mobilität"
+                                  ? tr("Mobilität")
                                   : template?.dimension}
                       </span>
                       <h4>{p.label}</h4>
                       {template && (
-                        <p>{estimateMinutes(template)} Min. geschätzt</p>
+                        <p>
+                          {estimateMinutes(template)}
+                          {tr(" Min. geschätzt")}
+                        </p>
                       )}
                       <div className="schedule-actions">
                         {template && !complete && (
@@ -174,7 +178,7 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
                         </button>
                       </div>
                       <label className="move-date">
-                        Verschieben
+                        {tr("Verschieben")}
                         <input
                           type="date"
                           aria-label={`${p.label} verschieben`}
@@ -204,13 +208,15 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
                 }}
               >
                 <Plus size={17} />
-                <span>Einplanen</span>
+                <span>{tr("Einplanen")}</span>
               </button>
             </div>
           ))}
         </div>
         <div className="section-foot">
-          <span className="hint">Ein freier Tag darf frei bleiben.</span>
+          <span className="hint">
+            {tr("Ein freier Tag darf frei bleiben.")}
+          </span>
           <button
             className="btn small-btn"
             onClick={() => {
@@ -248,16 +254,21 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
             }
           >
             <Copy size={15} />
-            {copied ? "In Folgewoche kopiert" : "In Folgewoche kopieren"}
+            {copied
+              ? tr("In Folgewoche kopiert")
+              : tr("In Folgewoche kopieren")}
           </button>
         </div>
       </section>
       <div className="section-head section-gap">
         <div>
-          <p className="eyebrow">DEIN BAUKASTEN</p>
-          <h2>Deine Workouts</h2>
+          <p className="eyebrow">{tr("DEIN BAUKASTEN")}</p>
+          <h2>{tr("Deine Workouts")}</h2>
         </div>
-        <span className="muted">{state.templates.length} Vorlagen</span>
+        <span className="muted">
+          {state.templates.length}
+          {tr(" Vorlagen")}
+        </span>
       </div>
       <div className="workout-grid">
         {state.templates.map((t, i) => (
@@ -268,21 +279,30 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
             </div>
             <div className="workout-body">
               <div className="tagline">
-                {t.dimension} · ca. {estimateMinutes(t)} Min.
+                {t.dimension}
+                {tr(" · ca. ")}
+                {estimateMinutes(t)}
+                {tr(" Min.")}
               </div>
               <h3>{t.name}</h3>
               <p>{t.description || "Dein individuelles Training."}</p>
               <div className="tag-row">
-                <span className="tag">{t.blocks.length} Blöcke</span>
                 <span className="tag">
-                  {t.blocks.reduce((n, b) => n + b.exercises.length, 0)} Übungen
+                  {t.blocks.length}
+                  {tr(" Blöcke")}
                 </span>
-                {t.sample && <span className="tag">Beispielvorlage</span>}
+                <span className="tag">
+                  {t.blocks.reduce((n, b) => n + b.exercises.length, 0)}
+                  {tr(" Übungen")}
+                </span>
+                {t.sample && (
+                  <span className="tag">{tr("Beispielvorlage")}</span>
+                )}
               </div>
               <div className="workout-actions">
                 <button className="btn primary" onClick={() => onStart(t)}>
                   <Play size={15} />
-                  Starten
+                  {tr("Starten")}
                 </button>
                 <button
                   className="icon-btn"
@@ -325,9 +345,9 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
       </div>
       {!state.templates.length && (
         <Empty
-          title="Dein erstes Workout wartet"
-          text="Wähle Übungen und finde deinen eigenen Rhythmus."
-          action="Workout erstellen"
+          title={tr("Dein erstes Workout wartet")}
+          text={tr("Wähle Übungen und finde deinen eigenen Rhythmus.")}
+          action={tr("Workout erstellen")}
           onAction={() => onEdit()}
         />
       )}
@@ -345,13 +365,15 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
       )}
       {removing && (
         <Modal
-          title="Eintrag aus dem Plan entfernen?"
+          title={tr("Eintrag aus dem Plan entfernen?")}
           onClose={() => setRemoving(null)}
         >
-          <p>Bereits gespeicherte Trainingsergebnisse bleiben erhalten.</p>
+          <p>
+            {tr("Bereits gespeicherte Trainingsergebnisse bleiben erhalten.")}
+          </p>
           <div className="modal-actions">
             <button className="btn" onClick={() => setRemoving(null)}>
-              Behalten
+              {tr("Behalten")}
             </button>
             <button
               className="btn primary"
@@ -363,7 +385,7 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
                 setRemoving(null);
               }}
             >
-              Eintrag entfernen
+              {tr("Eintrag entfernen")}
             </button>
           </div>
         </Modal>
@@ -390,7 +412,7 @@ function ScheduleModal({
     preselected ?? state.templates[0]?.id ?? "",
   );
   return (
-    <Modal title="Zeit für Bewegung einplanen" onClose={onClose}>
+    <Modal title={tr("Zeit für Bewegung einplanen")} onClose={onClose}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -409,7 +431,7 @@ function ScheduleModal({
           });
         }}
       >
-        <Field label="Datum">
+        <Field label={tr("Datum")}>
           <input
             type="date"
             required
@@ -417,20 +439,20 @@ function ScheduleModal({
             onChange={(e) => setDay(e.target.value)}
           />
         </Field>
-        <Field label="Was möchtest du einplanen?">
+        <Field label={tr("Was möchtest du einplanen?")}>
           <select
             value={kind}
             onChange={(e) => setKind(e.target.value as typeof kind)}
           >
-            <option value="workout">Workout</option>
-            <option value="rest">Ruhetag</option>
+            <option value="workout">{tr("Workout")}</option>
+            <option value="rest">{tr("Ruhetag")}</option>
             <option value="mobility">
-              Freie Mobility-Pause (ohne Protokoll)
+              {tr("Freie Mobility-Pause (ohne Protokoll)")}
             </option>
           </select>
         </Field>
         {kind === "workout" && (
-          <Field label="Workout">
+          <Field label={tr("Workout")}>
             <select
               required
               value={templateId}
@@ -450,7 +472,7 @@ function ScheduleModal({
             className="btn primary"
             disabled={kind === "workout" && !templateId}
           >
-            Einplanen
+            {tr("Einplanen")}
           </button>
         </div>
       </form>

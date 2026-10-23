@@ -1,5 +1,7 @@
 # Übergabe · Arbeit pausiert am 22.10.2026
 
+Späterer Ausbau 23.10.: Gespeicherte Sprachwahl Deutsch/Englisch in Einstellungen, Locale-Formate und erster UI-Katalog implementiert. Siehe LANGUAGES.md für Tests und noch deutsche dynamische Texte. Vorhandene Inhalte bleiben unverändert. Hosting noch nicht geklärt.
+
 Fortsetzung 23.10.2026: Version 0.5 als lokale PWA-Testbasis implementiert. Siehe VERSION-0.5.md für Update-Strategie, Installationshilfe und offene Abnahme. Hosting-Ziel/Zugangsschutz noch zu klären. Keine Veröffentlichung erfolgt. P1 und echte Gerätetests nicht abgeschlossen.
 
 ## Gesicherter Stand

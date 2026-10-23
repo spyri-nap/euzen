@@ -1,3 +1,5 @@
+import { t as tr } from "./i18n";
+import { setLanguage, useLanguage } from "./i18n";
 import { useEffect, useRef, useState } from "react";
 import {
   Activity,
@@ -52,7 +54,11 @@ const nav = [
 ] as const;
 
 export function App() {
+  useLanguage();
   const { state, update, error, saving, readonly, retry } = useStore();
+  useEffect(() => {
+    if (state) setLanguage(state.preferences.language);
+  }, [state?.preferences.language]);
   const [view, setView] = useState<View>("today");
   const [editor, setEditor] = useState<WorkoutTemplate | "new" | null>(null);
   const [settings, setSettings] = useState(false);
@@ -92,20 +98,21 @@ export function App() {
     return (
       <main className="boot">
         <div className="brand">
-          Eúzēn<span>εὖ ζῆν</span>
+          {tr("Eúzēn")}
+          <span>εὖ ζῆν</span>
         </div>
         {error ? (
           <>
-            <h1>Ein kurzer Zwischenstopp.</h1>
-            <p role="alert">{error}</p>
+            <h1>{tr("Ein kurzer Zwischenstopp.")}</h1>
+            <p role="alert">{tr(error)}</p>
             <button className="btn primary" onClick={retry}>
-              Erneut versuchen
+              {tr("Erneut versuchen")}
             </button>
           </>
         ) : (
           <>
             <div className="loading-orbit" />
-            <p>Dein Raum für Bewegung wird geöffnet …</p>
+            <p>{tr("Dein Raum für Bewegung wird geöffnet …")}</p>
           </>
         )}
       </main>
@@ -113,28 +120,29 @@ export function App() {
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main">
-        Zum Inhalt
+        {tr("Zum Inhalt")}
       </a>
       <aside className="sidebar">
         <button
           className="brand"
           onClick={() => navigate("today")}
-          aria-label="Eúzēn Startseite"
+          aria-label={tr("Eúzēn Startseite")}
         >
-          Eúzēn<span>εὖ ζῆν · GUT LEBEN</span>
+          {tr("Eúzēn")}
+          <span>{tr("εὖ ζῆν · GUT LEBEN")}</span>
         </button>
-        <p className="sidebar-caption">DEIN RAUM FÜR BEWEGUNG</p>
-        <nav aria-label="Hauptnavigation">
+        <p className="sidebar-caption">{tr("DEIN RAUM FÜR BEWEGUNG")}</p>
+        <nav aria-label={tr("Hauptnavigation")}>
           {nav.map((n) => (
             <button
               key={n.id}
               className={view === n.id ? "nav-link active" : "nav-link"}
               aria-current={view === n.id ? "page" : undefined}
-              aria-label={n.label}
+              aria-label={tr(n.label)}
               onClick={() => navigate(n.id)}
             >
               <n.icon size={20} strokeWidth={1.6} />
-              <span>{n.label}</span>
+              <span>{tr(n.label)}</span>
               {view === n.id && <i />}
             </button>
           ))}
@@ -143,33 +151,35 @@ export function App() {
           <div className="sidebar-quote">
             <Leaf size={25} strokeWidth={1.2} />
             <p>
-              Gut leben.
+              {tr("Gut leben.")}
               <br />
-              In Bewegung bleiben.
+              {tr("In Bewegung bleiben.")}
             </p>
-            <small>In deinem eigenen Rhythmus.</small>
+            <small>{tr("In deinem eigenen Rhythmus.")}</small>
           </div>
           <button
             className="nav-link"
-            aria-label="Einstellungen & Daten"
+            aria-label={tr("Einstellungen & Daten")}
             onClick={() => setSettings(true)}
           >
             <Settings2 size={19} />
-            <span>Einstellungen & Daten</span>
+            <span>{tr("Einstellungen & Daten")}</span>
           </button>
           <span className="local-label">
             <span className={`status-dot ${error ? "error-dot" : ""}`} />
             {error
-              ? "Speicher prüfen"
+              ? tr("Speicher prüfen")
               : saving
-                ? "Wird gespeichert …"
-                : "Lokal auf deinem Gerät"}
+                ? tr("Wird gespeichert …")
+                : tr("Lokal auf deinem Gerät")}
           </span>
         </div>
       </aside>
       <div className="main-shell">
         <header className="topbar">
-          <span className="topbar-label">BEWEGUNG FÜR EIN GUTES LEBEN</span>
+          <span className="topbar-label">
+            {tr("BEWEGUNG FÜR EIN GUTES LEBEN")}
+          </span>
           <div className="topbar-right">
             <span className="date-label">
               {formatDate(localDate(), {
@@ -180,13 +190,16 @@ export function App() {
             </span>
             <button
               className="icon-btn mobile-settings"
-              aria-label="Einstellungen & Daten"
+              aria-label={tr("Einstellungen & Daten")}
               onClick={() => setSettings(true)}
             >
               <Settings2 size={20} />
             </button>
-            <span className="avatar" aria-label="Persönlicher lokaler Bereich">
-              E
+            <span
+              className="avatar"
+              aria-label={tr("Persönlicher lokaler Bereich")}
+            >
+              {tr("E")}
             </span>
           </div>
         </header>
@@ -195,32 +208,34 @@ export function App() {
         />
         {error && (
           <div className="notice error" role="alert">
-            {error}
+            {tr(error)}
             <button className="btn small-btn" onClick={retry}>
-              Erneut speichern
+              {tr("Erneut speichern")}
             </button>
             <button
               className="btn small-btn"
               onClick={() => exportState(state)}
             >
-              Backup exportieren
+              {tr("Backup exportieren")}
             </button>
           </div>
         )}
         {readonly && (
           <div className="notice" role="alert">
-            Eúzēn ist bereits in einem anderen Tab geöffnet. Schließe den
-            anderen Tab und lade diese Ansicht neu, um Änderungen zu speichern.
+            {tr(
+              "Eúzēn ist bereits in einem anderen Tab geöffnet. Schließe den anderen Tab und lade diese Ansicht neu, um Änderungen zu speichern.",
+            )}
           </div>
         )}
         {active && view !== "train" && (
           <div className="resume-banner">
             <span>
               <span className="status-dot" />
-              Deine Session wartet: <strong>{active.snapshot.name}</strong>
+              {tr("Deine Session wartet: ")}
+              <strong>{active.snapshot.name}</strong>
             </span>
             <button className="text-button" onClick={() => setView("train")}>
-              Fortsetzen
+              {tr("Fortsetzen")}
               <ArrowRight size={16} />
             </button>
           </div>
@@ -270,11 +285,13 @@ export function App() {
         </main>
         <footer className="app-footer">
           <span>
-            Eúzēn <i>·</i> Gut leben. In Bewegung bleiben.
+            {tr("Eúzēn ")}
+            <i>·</i>
+            {tr(" Gut leben. In Bewegung bleiben.")}
           </span>
           <span>
             <ShieldCheck size={14} />
-            Deine Daten bleiben auf diesem Gerät.
+            {tr("Deine Daten bleiben auf diesem Gerät.")}
           </span>
         </footer>
       </div>
@@ -305,12 +322,13 @@ export function App() {
       )}
       {resumePrompt && (
         <Modal
-          title="Eine Session ist noch offen"
+          title={tr("Eine Session ist noch offen")}
           onClose={() => setResumePrompt(false)}
         >
           <p>
-            Setze deine aktuelle Session fort oder speichere sie dort als
-            unvollständig, bevor du ein neues Workout startest.
+            {tr(
+              "Setze deine aktuelle Session fort oder speichere sie dort als unvollständig, bevor du ein neues Workout startest.",
+            )}
           </p>
           <div className="modal-actions">
             <button
@@ -320,7 +338,7 @@ export function App() {
                 setView("train");
               }}
             >
-              Zur offenen Session
+              {tr("Zur offenen Session")}
             </button>
           </div>
         </Modal>
@@ -328,9 +346,9 @@ export function App() {
       {toast && (
         <div className="toast" role="status">
           <Check size={18} />
-          {toast}
+          {tr(toast)}
           <button
-            aria-label="Hinweis schließen"
+            aria-label={tr("Hinweis schließen")}
             className="icon-btn"
             onClick={() => setToast("")}
           >
@@ -387,13 +405,13 @@ function Today({
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">KLEINE SCHRITTE. EIN GUTES LEBEN.</p>
-          <h1>Schön, dass du da bist.</h1>
-          <p>Dein Körper. Dein Tempo. Dein nächster guter Schritt.</p>
+          <p className="eyebrow">{tr("KLEINE SCHRITTE. EIN GUTES LEBEN.")}</p>
+          <h1>{tr("Schön, dass du da bist.")}</h1>
+          <p>{tr("Dein Körper. Dein Tempo. Dein nächster guter Schritt.")}</p>
         </div>
         <button className="btn" onClick={onCreate}>
           <Plus size={17} />
-          Eigenes Workout
+          {tr("Eigenes Workout")}
         </button>
       </div>
       <div className="today-layout">
@@ -403,23 +421,32 @@ function Today({
               <span className="status-dot" />
               {next
                 ? next.date === today
-                  ? "DEIN TRAINING FÜR HEUTE"
-                  : `ALS NÄCHSTES · ${formatDate(next.date).toUpperCase()}`
-                : "FINDE DEINEN RHYTHMUS"}
+                  ? tr("DEIN TRAINING FÜR HEUTE")
+                  : `${tr("ALS NÄCHSTES")} · ${formatDate(next.date).toUpperCase()}`
+                : tr("FINDE DEINEN RHYTHMUS")}
             </span>
-            <h2>{workout?.name ?? "Dein erster guter Schritt."}</h2>
+            <h2>{workout?.name ?? tr("Dein erster guter Schritt.")}</h2>
             <p>
               {workout?.description ??
-                "Gestalte dein erstes Workout. Mit Übungen, die zu dir passen."}
+                tr(
+                  "Gestalte dein erstes Workout. Mit Übungen, die zu dir passen.",
+                )}
             </p>
             {workout && (
               <div className="hero-meta">
                 <span>
                   <Dumbbell size={16} />
-                  {workout.dimension}
+                  {tr(workout.dimension)}
                 </span>
-                <span>◷ ca. {estimateMinutes(workout)} Min.</span>
-                <span>{workout.blocks.length} Blöcke</span>
+                <span>
+                  {tr("◷ ca. ")}
+                  {estimateMinutes(workout)}
+                  {tr(" Min.")}
+                </span>
+                <span>
+                  {workout.blocks.length}
+                  {tr(" Blöcke")}
+                </span>
               </div>
             )}
             <button
@@ -433,12 +460,12 @@ function Today({
               ) : (
                 <Plus size={16} />
               )}{" "}
-              {workout ? "Workout starten" : "Workout erstellen"}
+              {workout ? tr("Workout starten") : tr("Workout erstellen")}
               <ArrowRight size={18} />
             </button>
             {workout?.sample && (
               <small className="hero-caption">
-                Beispielvorlage · jederzeit anpassbar
+                {tr("Beispielvorlage · jederzeit anpassbar")}
               </small>
             )}
           </div>
@@ -448,18 +475,20 @@ function Today({
           <span className="round-icon">
             <Sun size={23} strokeWidth={1.3} />
           </span>
-          <p className="eyebrow">KURZ BEI DIR ANKOMMEN</p>
-          <h2>Wie geht’s dir heute?</h2>
+          <p className="eyebrow">{tr("KURZ BEI DIR ANKOMMEN")}</p>
+          <h2>{tr("Wie geht’s dir heute?")}</h2>
           <p>
             {checkin
               ? `Dein Check-in: Energie ${checkin.energy}/5 und Erholung ${checkin.recovery}/5. Schön, dass du dir den Moment genommen hast.`
-              : "Ein kleiner Check-in hilft dir, bewusst in dein Training zu gehen."}
+              : tr(
+                  "Ein kleiner Check-in hilft dir, bewusst in dein Training zu gehen.",
+                )}
           </p>
           <button className="btn full" onClick={() => setChecking(true)}>
-            {checkin ? "Check-in bearbeiten" : "Mein Check-in"}
+            {checkin ? tr("Check-in bearbeiten") : tr("Mein Check-in")}
             <ArrowRight size={16} />
           </button>
-          <small>Freiwillig. Nur für dich.</small>
+          <small>{tr("Freiwillig. Nur für dich.")}</small>
         </section>
       </div>
       <section className="panel weekly-summary">
@@ -468,10 +497,10 @@ function Today({
             <p className="eyebrow">
               {formatDate(start)} – {formatDate(addDays(start, 6))}
             </p>
-            <h2>Deine Woche in Bewegung</h2>
+            <h2>{tr("Deine Woche in Bewegung")}</h2>
           </div>
           <button className="text-button" onClick={() => onNavigate("plan")}>
-            Plan gestalten
+            {tr("Plan gestalten")}
             <ArrowRight size={16} />
           </button>
         </div>
@@ -509,14 +538,14 @@ function Today({
                 </span>
                 <small>
                   {completed
-                    ? "Geschafft"
+                    ? tr("Geschafft")
                     : completedCount > 0
                       ? `${completedCount}/${workouts.length} geschafft`
                       : w
-                        ? "Training"
+                        ? tr("Training")
                         : entries.length
-                          ? "Erholung"
-                          : "Freiraum"}
+                          ? tr("Erholung")
+                          : tr("Freiraum")}
                 </small>
               </button>
             );
@@ -532,16 +561,18 @@ function Today({
           </div>
           <span>
             <strong>
-              {done} von {weekItems.length}
+              {done}
+              {tr(" von ")}
+              {weekItems.length}
             </strong>{" "}
-            geplanten Workouts abgeschlossen
+            {tr("geplanten Workouts abgeschlossen")}
           </span>
         </div>
       </section>
       <div className="section-head section-gap">
-        <h2>Dein Weg, auf einen Blick</h2>
+        <h2>{tr("Dein Weg, auf einen Blick")}</h2>
         <button className="text-button" onClick={() => onNavigate("progress")}>
-          Fortschritt ansehen
+          {tr("Fortschritt ansehen")}
           <ArrowRight size={16} />
         </button>
       </div>
@@ -552,7 +583,7 @@ function Today({
           </span>
           <div>
             <strong>{stats.complete}</strong>
-            <span>Workouts abgeschlossen</span>
+            <span>{tr("Workouts abgeschlossen")}</span>
           </div>
         </div>
         <div>
@@ -561,7 +592,7 @@ function Today({
           </span>
           <div>
             <strong>{stats.days}</strong>
-            <span>Aktive Trainingstage</span>
+            <span>{tr("Aktive Trainingstage")}</span>
           </div>
         </div>
         <div>
@@ -570,16 +601,16 @@ function Today({
           </span>
           <div>
             <strong>
-              {number(stats.minutes, 1)} <small>Min.</small>
+              {number(stats.minutes, 1)} <small>{tr("Min.")}</small>
             </strong>
-            <span>Zeit für dich</span>
+            <span>{tr("Zeit für dich")}</span>
           </div>
         </div>
       </div>
       <div className="two-col section-gap">
         <section className="panel next-card">
           <div className="section-head">
-            <h2>Dein nächster Rhythmus</h2>
+            <h2>{tr("Dein nächster Rhythmus")}</h2>
             <CalendarDays size={20} />
           </div>
           {upcoming.slice(0, 2).map((p) => (
@@ -601,24 +632,28 @@ function Today({
           ))}
           {!upcoming.length && (
             <Empty
-              title="Platz für deinen nächsten Schritt"
-              text="Plane eine Einheit oder genieße bewusst einen freien Tag."
-              action="Woche planen"
+              title={tr("Platz für deinen nächsten Schritt")}
+              text={tr(
+                "Plane eine Einheit oder genieße bewusst einen freien Tag.",
+              )}
+              action={tr("Woche planen")}
               onAction={() => onNavigate("plan")}
             />
           )}
         </section>
         <button className="space-invite" onClick={() => onNavigate("space")}>
           <Sparkles size={23} strokeWidth={1.3} />
-          <p className="eyebrow">EÚZĒN SPACE</p>
+          <p className="eyebrow">{tr("EÚZĒN SPACE")}</p>
           <h2>
-            Bewegung verstehen.
+            {tr("Bewegung verstehen.")}
             <br />
-            Gut für dich sorgen.
+            {tr("Gut für dich sorgen.")}
           </h2>
-          <p>Wissen, Reflexion und neue Perspektiven für deinen Alltag.</p>
+          <p>
+            {tr("Wissen, Reflexion und neue Perspektiven für deinen Alltag.")}
+          </p>
           <span className="text-button">
-            Space entdecken
+            {tr("Space entdecken")}
             <ArrowRight size={16} />
           </span>
         </button>
@@ -657,10 +692,11 @@ function Checkin({
   const [energy, setEnergy] = useState(initialEnergy);
   const [recovery, setRecovery] = useState(initialRecovery);
   return (
-    <Modal title="Einen Moment für dich." onClose={onClose}>
+    <Modal title={tr("Einen Moment für dich.")} onClose={onClose}>
       <p>
-        Wie fühlst du dich heute? Deine Einschätzung bleibt eine persönliche
-        Notiz.
+        {tr(
+          "Wie fühlst du dich heute? Deine Einschätzung bleibt eine persönliche Notiz.",
+        )}
       </p>
       {[
         { label: "Energie", value: energy, set: setEnergy },
@@ -668,7 +704,7 @@ function Checkin({
       ].map((item) => (
         <fieldset className="rating" key={item.label}>
           <legend>
-            {item.label} · {item.value}/5
+            {tr(item.label)} · {item.value}/5
           </legend>
           <div>
             {[1, 2, 3, 4, 5].map((v) => (
@@ -682,7 +718,7 @@ function Checkin({
               </button>
             ))}
           </div>
-          <small>1 = wenig · 5 = sehr gut</small>
+          <small>{tr("1 = wenig · 5 = sehr gut")}</small>
         </fieldset>
       ))}
       <div className="modal-actions">
@@ -690,7 +726,7 @@ function Checkin({
           className="btn primary"
           onClick={() => onSave(energy, recovery)}
         >
-          Check-in speichern
+          {tr("Check-in speichern")}
         </button>
       </div>
     </Modal>
@@ -709,29 +745,63 @@ function Settings({
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   return (
-    <Modal title="Deine Daten. Dein Raum." onClose={onClose}>
+    <Modal title={tr("Deine Daten. Dein Raum.")} onClose={onClose}>
+      <Field label={tr("Sprache der Oberfläche")}>
+        <select
+          value={state.preferences.language}
+          onChange={(e) =>
+            update((s) => ({
+              ...s,
+              preferences: {
+                ...s.preferences,
+                language: e.target.value as "de" | "en",
+              },
+            }))
+          }
+        >
+          <option value="de" lang="de">
+            Deutsch
+          </option>
+          <option value="en" lang="en">
+            English
+          </option>
+        </select>
+      </Field>
+      <p className="hint">
+        {tr("Eigene Namen und Notizen werden nicht übersetzt.")}
+      </p>
       <p>
-        Eúzēn speichert dein Training in diesem Browser auf diesem Gerät. Es
-        gibt noch keinen Cloud-Sync. Gelöschte Browserdaten können nicht
-        wiederhergestellt werden – bewahre regelmäßig ein Backup auf.
+        {tr(
+          "Eúzēn speichert dein Training in diesem Browser auf diesem Gerät. Es gibt noch keinen Cloud-Sync. Gelöschte Browserdaten können nicht wiederhergestellt werden – bewahre regelmäßig ein Backup auf.",
+        )}
       </p>
       <div className="callout">
         <ShieldCheck size={20} />
-        Keine Werbetracker. Keine externen KI-Anfragen. Keine verbundenen
-        Gesundheitsdienste.
+        {tr(
+          "Keine Werbetracker. Keine externen KI-Anfragen. Keine verbundenen Gesundheitsdienste.",
+        )}
       </div>
       <div className="settings-counts">
-        <span>{state.exercises.length} Übungen</span>
-        <span>{state.templates.length} Workouts</span>
-        <span>{state.sessions.length} Sessions</span>
+        <span>
+          {state.exercises.length}
+          {tr(" Übungen")}
+        </span>
+        <span>
+          {state.templates.length}
+          {tr(" Workouts")}
+        </span>
+        <span>
+          {state.sessions.length}
+          {tr(" Sessions")}
+        </span>
       </div>
       <button className="btn primary full" onClick={() => exportState(state)}>
         <ArrowDownToLine size={18} />
-        JSON-Backup exportieren
+        {tr("JSON-Backup exportieren")}
       </button>
       <label className="btn full upload-label">
         <Upload size={18} />
-        Backup zum Prüfen auswählen
+        {tr("Backup zum Prüfen auswählen")}
         <input
           type="file"
           accept="application/json,.json"
@@ -755,18 +825,22 @@ function Settings({
       </label>
       {incoming && (
         <div className="import-preview">
-          <h3>Geprüftes Backup · Version 1</h3>
+          <h3>{tr("Geprüftes Backup · Version 1")}</h3>
           <p>
-            {incoming.templates.length} Workouts, {incoming.sessions.length}{" "}
-            Sessions und {incoming.scheduled.length} Planeinträge.
+            {incoming.templates.length}
+            {tr(" Workouts, ")}
+            {incoming.sessions.length} {tr("Sessions und ")}
+            {incoming.scheduled.length}
+            {tr(" Planeinträge.")}
           </p>
           <p>
-            Der Import ersetzt die lokalen Daten. Vorher wird automatisch ein
-            Backup des aktuellen Stands heruntergeladen.
+            {tr(
+              "Der Import ersetzt die lokalen Daten. Vorher wird automatisch ein Backup des aktuellen Stands heruntergeladen.",
+            )}
           </p>
           <div className="button-row">
             <button className="btn" onClick={() => setIncoming(null)}>
-              Abbrechen
+              {tr("Abbrechen")}
             </button>
             <button
               className="btn primary"
@@ -777,17 +851,17 @@ function Settings({
                 setMessage("Backup übernommen.");
               }}
             >
-              Backup herunterladen & ersetzen
+              {tr("Backup herunterladen & ersetzen")}
             </button>
           </div>
         </div>
       )}
       {error && (
         <p className="error" role="alert">
-          {error}
+          {tr(error)}
         </p>
       )}
-      {message && <p role="status">{message}</p>}
+      {message && <p role="status">{tr(message)}</p>}
       <hr />
       <label className="checkbox-row">
         <input
@@ -800,21 +874,22 @@ function Settings({
             }))
           }
         />
-        Optionale Timer-Töne aktivieren
+        {tr("Optionale Timer-Töne aktivieren")}
       </label>
       <p className="hint">
-        Starte den Timer einmal per Klick, damit der Browser Audio freigeben
-        kann. Signale im Hintergrund sind nicht garantiert.
+        {tr(
+          "Starte den Timer einmal per Klick, damit der Browser Audio freigeben kann. Signale im Hintergrund sind nicht garantiert.",
+        )}
       </p>
       <details>
         <summary>
           <CircleHelp size={16} />
-          Über dieses Grundgerüst
+          {tr("Über dieses Grundgerüst")}
         </summary>
         <p>
-          Version 0.5 · Sprache Deutsch. Datenformat mit Schema-Versionierung.
-          Vorlagen dienen der allgemeinen Trainingsplanung; passe sie an deine
-          Erfahrung und deine Möglichkeiten an.
+          {tr(
+            "Version 0.5 · Sprache Deutsch. Datenformat mit Schema-Versionierung. Vorlagen dienen der allgemeinen Trainingsplanung; passe sie an deine Erfahrung und deine Möglichkeiten an.",
+          )}
         </p>
       </details>
     </Modal>

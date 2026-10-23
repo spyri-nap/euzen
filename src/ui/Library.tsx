@@ -1,3 +1,4 @@
+import { t as tr } from "../i18n";
 import { useState } from "react";
 import {
   Plus,
@@ -40,21 +41,23 @@ export function Library({ state, update }: Props) {
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">DEINE BEWEGUNGSBAUSTEINE</p>
-          <h1>Die Bibliothek.</h1>
-          <p>Gute Bewegung beginnt mit einer Übung, die zu dir passt.</p>
+          <p className="eyebrow">{tr("DEINE BEWEGUNGSBAUSTEINE")}</p>
+          <h1>{tr("Die Bibliothek.")}</h1>
+          <p>
+            {tr("Gute Bewegung beginnt mit einer Übung, die zu dir passt.")}
+          </p>
         </div>
         <button className="btn primary" onClick={() => setCreating(true)}>
           <Plus size={18} />
-          Eigene Übung
+          {tr("Eigene Übung")}
         </button>
       </div>
       <div className="toolbar">
         <label className="search">
           <Search size={18} />
           <input
-            aria-label="Übungen suchen"
-            placeholder="Übung oder Bewegungsmuster suchen"
+            aria-label={tr("Übungen suchen")}
+            placeholder={tr("Übung oder Bewegungsmuster suchen")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -65,52 +68,52 @@ export function Library({ state, update }: Props) {
           onClick={() => setFavorites(!favorites)}
         >
           <Star size={17} />
-          Favoriten
+          {tr("Favoriten")}
         </button>
         <label className="filter">
           <SlidersHorizontal size={16} />
           <select
-            aria-label="Equipment filtern"
+            aria-label={tr("Equipment filtern")}
             value={equipment}
             onChange={(e) => setEquipment(e.target.value)}
           >
-            <option value="Alle">Jedes Equipment</option>
+            <option value="Alle">{tr("Jedes Equipment")}</option>
             {[...new Set(state.exercises.map((e) => e.equipment))].map((e) => (
               <option key={e}>{e}</option>
             ))}
           </select>
         </label>
       </div>
-      <div className="chips" aria-label="Trainingsdimension">
+      <div className="chips" aria-label={tr("Trainingsdimension")}>
         {["Alle", ...dimensions].map((d) => (
           <button
-            key={d}
+            key={tr(d)}
             className={`chip ${dimension === d ? "active" : ""}`}
             aria-pressed={dimension === d}
             onClick={() => setDimension(d)}
           >
-            {d}
+            {tr(d)}
           </button>
         ))}
       </div>
       <div className="exercise-grid">
         {shown.map((e) => (
           <article className="exercise-card" key={e.id}>
-            <div className={`exercise-visual tone-${e.dimension}`}>
+            <div className={`exercise-visual tone-${tr(e.dimension)}`}>
               <span>
                 {e.pattern === "Mobilität"
-                  ? "↝"
+                  ? tr("↝")
                   : e.pattern === "Balance"
-                    ? "⊥"
+                    ? tr("⊥")
                     : e.pattern === "Rotation"
-                      ? "↻"
+                      ? tr("↻")
                       : e.pattern === "Fortbewegung"
-                        ? "↗"
-                        : "∿"}
+                        ? tr("↗")
+                        : tr("∿")}
               </span>
               <button
                 className="icon-btn"
-                aria-label={`${e.name} ${e.favorite ? "aus Favoriten entfernen" : "favorisieren"}`}
+                aria-label={`${e.name} ${e.favorite ? tr("aus Favoriten entfernen") : tr("favorisieren")}`}
                 aria-pressed={e.favorite}
                 onClick={() =>
                   update((s) => ({
@@ -137,16 +140,18 @@ export function Library({ state, update }: Props) {
                 <ArrowUpRight size={18} />
               </button>
               <p>{e.cue}</p>
-              <span className="tag">{e.dimension}</span>
-              {e.custom && <span className="tag">Eigene Übung</span>}
+              <span className="tag">{tr(e.dimension)}</span>
+              {e.custom && <span className="tag">{tr("Eigene Übung")}</span>}
             </div>
           </article>
         ))}
       </div>
       {!shown.length && (
         <Empty
-          title="Noch kein Treffer"
-          text="Versuche einen anderen Suchbegriff oder ändere die Filter."
+          title={tr("Noch kein Treffer")}
+          text={tr(
+            "Versuche einen anderen Suchbegriff oder ändere die Filter.",
+          )}
         />
       )}
       {selected && (
@@ -191,21 +196,21 @@ function ExerciseDetails({
   return (
     <Modal title={e.name} onClose={onClose}>
       <p className="eyebrow">
-        {e.dimension} · {e.equipment}
+        {tr(e.dimension)} · {e.equipment}
       </p>
       <p>{e.description}</p>
       <div className="callout">{e.cue}</div>
       <div className="two-col">
         <div>
-          <h4>Leichter gestalten</h4>
+          <h4>{tr("Leichter gestalten")}</h4>
           <p>{e.easier || "Intensität individuell reduzieren."}</p>
         </div>
         <div>
-          <h4>Weiterentwickeln</h4>
+          <h4>{tr("Weiterentwickeln")}</h4>
           <p>{e.harder || "Bewegung kontrollierter ausführen."}</p>
         </div>
       </div>
-      <Field label="Deine Techniknotizen">
+      <Field label={tr("Deine Techniknotizen")}>
         <textarea
           value={notes}
           maxLength={2000}
@@ -214,7 +219,7 @@ function ExerciseDetails({
       </Field>
       <div className="modal-actions">
         <button className="btn primary" onClick={() => onSave({ ...e, notes })}>
-          Notizen speichern
+          {tr("Notizen speichern")}
         </button>
       </div>
     </Modal>
@@ -246,7 +251,7 @@ function ExerciseForm({
   });
   const [error, setError] = useState("");
   return (
-    <Modal title="Deine eigene Übung" onClose={onClose}>
+    <Modal title={tr("Deine eigene Übung")} onClose={onClose}>
       <form
         onSubmit={(ev) => {
           ev.preventDefault();
@@ -258,7 +263,7 @@ function ExerciseForm({
           onSave(r.data);
         }}
       >
-        <Field label="Name">
+        <Field label={tr("Name")}>
           <input
             required
             maxLength={100}
@@ -267,7 +272,7 @@ function ExerciseForm({
           />
         </Field>
         <div className="two-col">
-          <Field label="Bewegungsmuster">
+          <Field label={tr("Bewegungsmuster")}>
             <select
               value={e.pattern}
               onChange={(v) =>
@@ -275,11 +280,13 @@ function ExerciseForm({
               }
             >
               {patterns.map((v) => (
-                <option key={v}>{v}</option>
+                <option key={v} value={v}>
+                  {tr(v)}
+                </option>
               ))}
             </select>
           </Field>
-          <Field label="Dimension">
+          <Field label={tr("Dimension")}>
             <select
               value={e.dimension}
               onChange={(v) =>
@@ -290,13 +297,15 @@ function ExerciseForm({
               }
             >
               {dimensions.map((v) => (
-                <option key={v}>{v}</option>
+                <option key={v} value={v}>
+                  {tr(v)}
+                </option>
               ))}
             </select>
           </Field>
         </div>
         <div className="two-col">
-          <Field label="Equipment">
+          <Field label={tr("Equipment")}>
             <input
               required
               maxLength={100}
@@ -304,7 +313,7 @@ function ExerciseForm({
               onChange={(v) => set({ ...e, equipment: v.target.value })}
             />
           </Field>
-          <Field label="Niveau">
+          <Field label={tr("Niveau")}>
             <select
               value={e.level}
               onChange={(v) =>
@@ -312,13 +321,15 @@ function ExerciseForm({
               }
             >
               {["Einfach", "Mittel", "Fortgeschritten"].map((v) => (
-                <option key={v}>{v}</option>
+                <option key={v} value={v}>
+                  {tr(v)}
+                </option>
               ))}
             </select>
           </Field>
         </div>
         <fieldset className="metric-options">
-          <legend>Messgrößen</legend>
+          <legend>{tr("Messgrößen")}</legend>
           {(
             [
               ["reps", "Wiederholungen"],
@@ -340,18 +351,18 @@ function ExerciseForm({
                   })
                 }
               />
-              {label}
+              {tr(label)}
             </label>
           ))}
         </fieldset>
-        <Field label="Beschreibung">
+        <Field label={tr("Beschreibung")}>
           <textarea
             maxLength={2000}
             value={e.description}
             onChange={(v) => set({ ...e, description: v.target.value })}
           />
         </Field>
-        <Field label="Kurzer Technikhinweis">
+        <Field label={tr("Kurzer Technikhinweis")}>
           <input
             maxLength={2000}
             value={e.cue}
@@ -359,14 +370,14 @@ function ExerciseForm({
           />
         </Field>
         <div className="two-col">
-          <Field label="Leichtere Variante">
+          <Field label={tr("Leichtere Variante")}>
             <input
               value={e.easier}
               maxLength={2000}
               onChange={(v) => set({ ...e, easier: v.target.value })}
             />
           </Field>
-          <Field label="Anspruchsvollere Variante">
+          <Field label={tr("Anspruchsvollere Variante")}>
             <input
               value={e.harder}
               maxLength={2000}
@@ -374,7 +385,7 @@ function ExerciseForm({
             />
           </Field>
         </div>
-        <Field label="Tags (durch Komma getrennt)">
+        <Field label={tr("Tags (durch Komma getrennt)")}>
           <input
             maxLength={1000}
             value={e.tags.join(",")}
@@ -391,12 +402,12 @@ function ExerciseForm({
         </Field>
         {error && (
           <p role="alert" className="error">
-            {error}
+            {tr(error)}
           </p>
         )}
         <div className="modal-actions">
           <button className="btn primary" type="submit">
-            Übung speichern
+            {tr("Übung speichern")}
           </button>
         </div>
       </form>
