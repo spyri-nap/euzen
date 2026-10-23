@@ -1,5 +1,7 @@
 # Übergabe · Arbeit pausiert am 22.10.2026
 
+Neuester Stand: Kontoansicht in Einstellungen integriert (Account.tsx), Testkonfiguration lokal gesetzt und gitignoriert. OTP-/Profil-UI DE/EN, Sitzungsabonnement und Abmeldung implementiert. 71 Tests plus Typecheck erfolgreich. Trainingsdaten bleiben unzugeordnet lokal; Sync/Reset fehlen. Echter E-Mail-Versand und interaktive Browserabnahme offen. Siehe Update in AUTH-SETUP.md. Nicht als vollständige 0.6 freigeben.
+
 Neuster technischer Schritt 23.10.: SDK 2.118.0 und getesteter Auth-/Profil-Service vorhanden, noch nicht in UI integriert. Node >=22.12; Vitest 4.1.12 behebt gefundene Toolchain-Advisories. 69 Unit-Tests erfolgreich. Siehe AUTH-SETUP.md für Konfigurationsgates und verbleibende Integration. Keine bedienbare Konto-/Sync-Freigabe.
 
 Aktuell 23.10.: Vercel-Preview auf Feature-Branch ist eingerichtet (siehe vercel.json). Vorbereitungsstand für 0.6: leerer Start, Einführung und lokale Konto-Speicher-API. Vorhandenes Supabase-Projekt `yvxzcawjtyqcljuoyfeg` ist als Testumgebung freigegeben; Profil-Migration angewendet, SQL-Isolationstests erfolgreich und Security Advisor ohne Hinweise. Workout-Sync-Entwurf liegt bewusst außerhalb der ausführbaren Migrationen. Siehe VERSION-0.6-PREPARATION.md. Bedienbare Anmeldung und Sync noch NICHT implementiert. Nächster Schritt: SDK/OTP, Profil-UI und sichere Konto-Speicherumschaltung. Bestehende lokale Daten bleiben unverändert. Keine Produktionsfreigabe.

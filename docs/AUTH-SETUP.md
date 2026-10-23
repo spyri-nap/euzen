@@ -8,6 +8,8 @@ Node >=22.12 erforderlich. Vitest auf 4.1.12 aktualisiert, nachdem npm audit Sic
 
 ## Noch nicht integriert
 
+Update 23.10.: Die folgende ursprüngliche Beschreibung ist überholt: `Account` ist jetzt in Einstellungen eingebunden, lazy geladen und nutzt die lokale, gitignorierte Testkonfiguration. INITIAL_SESSION und Auth-Änderungen werden abonniert; Abmeldung, OTP-Eingabe und Profilformular DE/EN sind implementiert. Profilantworten sind an die Lebensdauer der jeweiligen Nutzeransicht gebunden. Der lokale Trainingsbereich bleibt ausdrücklich unzugeordnet. CSP enthält ausschließlich die konkrete Supabase-Origin. Keine Trainingsspeicherumschaltung oder Synchronisierung; diese Meilensteine sind weiterhin offen. Vercel-Umgebungsvariablen wurden nicht gesetzt, keine Veröffentlichung. Browser-End-to-End-Abnahme und echter Versand sind noch nicht erfolgt; die bestehende Vorschau zeigte beim Nachsehen noch den alten Stand. 71 Unit-/Render-Tests, Typecheck und Build erfolgreich. Render-Tests ersetzen keine Interaktionstests.
+
 Service ist absichtlich noch nicht in App/Settings eingehängt. Daher keine sichtbare Anmeldung, keine Profilbearbeitung und keine neue Sessionrestoration in der Oberfläche. Keine lokalen Daten automatisch zugeordnet. `.env.example` wird noch nicht von einer App-Initialisierung gelesen. Kein Cloud-Sync oder Reset.
 
 Nächste Implementierung: Auth-Controller mit geschützter asynchroner Antwortverarbeitung, Konto-Gate und getrennte Trainingsspeicher einschließlich Editorentwürfen. Vorher keine Anmeldung neben scheinbar bereits zugeordneten Gastdaten anzeigen. Profile-UI vollständig DE/EN umsetzen. Anschließend Sync und Reset gemäß VERSION-0.6-PREPARATION.md.

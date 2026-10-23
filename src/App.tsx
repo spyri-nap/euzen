@@ -1,6 +1,6 @@
 import { t as tr } from "./i18n";
 import { setLanguage, useLanguage } from "./i18n";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   Activity,
   ArrowDownToLine,
@@ -44,6 +44,9 @@ import { Player } from "./ui/Player";
 import { Space } from "./ui/Space";
 import { MobileApp } from "./ui/MobileApp";
 import { Onboarding } from "./ui/Onboarding";
+const Account = lazy(() =>
+  import("./ui/Account").then((m) => ({ default: m.Account })),
+);
 
 type View = "today" | "plan" | "library" | "progress" | "space" | "train";
 const nav = [
@@ -777,6 +780,13 @@ function Settings({
   const [message, setMessage] = useState("");
   return (
     <Modal title={tr("Deine Daten. Dein Raum.")} onClose={onClose}>
+      <Suspense
+        fallback={
+          <p role="status">{tr("Dein Raum für Bewegung wird geöffnet …")}</p>
+        }
+      >
+        <Account />
+      </Suspense>
       <Field label={tr("Sprache der Oberfläche")}>
         <select
           value={state.preferences.language}

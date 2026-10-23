@@ -104,16 +104,16 @@ export class AccountService {
     return data.user.id;
   }
   async loadProfile() {
-    return this.exclusive(async () => {
-      const id = await this.user();
-      const { data, error } = await this.client
-        .from("euzen_profiles")
-        .select("*")
-        .eq("user_id", id)
-        .maybeSingle();
-      if (error) throw new AccountError("request_failed");
-      return data ? profileSchema.parse(data) : null;
-    });
+    // Reads may overlap during StrictMode remounts; only writes require a mutex.
+    if (!this.online()) throw new AccountError("offline");
+    const id = await this.user();
+    const { data, error } = await this.client
+      .from("euzen_profiles")
+      .select("*")
+      .eq("user_id", id)
+      .maybeSingle();
+    if (error) throw new AccountError("request_failed");
+    return data ? profileSchema.parse(data) : null;
   }
   async saveProfile(input: Omit<Profile, "user_id">) {
     return this.exclusive(async () => {
