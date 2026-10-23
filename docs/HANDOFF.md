@@ -1,6 +1,6 @@
 # Übergabe · Arbeit pausiert am 22.10.2026
 
-Aktuell 23.10.: Vercel-Preview auf Feature-Branch ist eingerichtet (siehe vercel.json). Vorbereitungsstand für 0.6: leerer Start, Einführung, lokale Konto-Speicher-API und unausgeführter SQL-Kandidat. Siehe VERSION-0.6-PREPARATION.md. Echte Konten und Sync noch NICHT implementiert; Supabase-Zielumgebung/Freigabe stehen aus. Bestehende lokale Daten bleiben unverändert.
+Aktuell 23.10.: Vercel-Preview auf Feature-Branch ist eingerichtet (siehe vercel.json). Vorbereitungsstand für 0.6: leerer Start, Einführung und lokale Konto-Speicher-API. Vorhandenes Supabase-Projekt `yvxzcawjtyqcljuoyfeg` ist als Testumgebung freigegeben; Profil-Migration angewendet, SQL-Isolationstests erfolgreich und Security Advisor ohne Hinweise. Workout-Sync-Entwurf liegt bewusst außerhalb der ausführbaren Migrationen. Siehe VERSION-0.6-PREPARATION.md. Bedienbare Anmeldung und Sync noch NICHT implementiert. Nächster Schritt: SDK/OTP, Profil-UI und sichere Konto-Speicherumschaltung. Bestehende lokale Daten bleiben unverändert. Keine Produktionsfreigabe.
 
 Späterer Ausbau 23.10.: Gespeicherte Sprachwahl Deutsch/Englisch in Einstellungen, Locale-Formate und erster UI-Katalog implementiert. Siehe LANGUAGES.md für Tests und noch deutsche dynamische Texte. Vorhandene Inhalte bleiben unverändert. Hosting noch nicht geklärt.
 

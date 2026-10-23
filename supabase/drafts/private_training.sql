@@ -1,4 +1,6 @@
--- Candidate migration. Apply only to an explicitly approved test project.
+-- DESIGN DRAFT ONLY. Not part of executable migration history.
+-- Profile creation now lives in migrations/*_account_profiles.sql.
+-- Do not apply: nested reference validation and RPC hardening are pending.
 begin;
 create table public.euzen_profiles (
  user_id uuid primary key references auth.users(id) on delete cascade,
