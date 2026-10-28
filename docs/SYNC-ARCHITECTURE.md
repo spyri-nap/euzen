@@ -39,3 +39,15 @@ Gastentitäten werden jetzt in einem stabilen Namensraum für den jeweiligen vol
 Änderungsoperationen werden innerhalb eines Änderungsbatches nach Referenzabhängigkeit geordnet: neue Eltern zuerst, Löschungen abhängiger Entitäten vor Eltern. Lokal fehlgeschlagene Speicherung blockiert Pull/Upload bis zur erneuten Speicherung. Offline-Konten ohne Cache und reine Lesetabs ohne Cache erhalten eine erklärende Meldung.
 
 Weiter offen und NICHT als abgeschlossen ausweisen: vollständige serverseitige Fachregeln/Quoten, umfassende Multi-Tab-/Generationswechsel-Abnahme, neueste lokale Konfliktfassung im Vergleich, Konfliktkopie, echter Browser-/Zwei-Geräte-Test. Kontosync bleibt deaktiviert. Der Gesamtauftrag ist noch nicht abgeschlossen.
+
+## Aktueller Abnahmestand · 28.10.2026, Browserprüfung
+
+Migrationen sync_integrity_limits und fix_workout_validation_alias im Testprojekt angewendet. Zusätzliche private Trigger prüfen Workout-IDs, Schrittlimits, AMRAP, Session-Snapshots, Phasen-/Ergebnisreferenzen, Timer-/Abschlusskonsistenz, Kalenderdaten und höchstens eine aktive Session. Kontodaten auf 64 MiB begrenzt, Operationsbelege auf 100.000 bzw. 128 MiB pro Konto. Quoten stoppen Schreibvorgänge atomar. Keine automatische Beleg-/Tombstone-Bereinigung; an der Grenze Export und manuelle Klärung erforderlich. Geringere fachliche Entitätslimits des Clients sind noch nicht für jede Sammlung serverseitig abgebildet.
+
+SQL-Prüfung mit synthetischer gültiger Session sowie ungültigem Index, Abschluss und Phasenbezug bestanden, Fixtures zurückgerollt. 64-MiB-Quotengrenze durch Testschreibvorgänge tatsächlich erreicht und korrekt abgewiesen; vollständig zurückgerollt. Receipt-Grenzen nicht mit einem Lasttest ausgeschöpft.
+
+Lokaler isolierter Testserver: http://127.0.0.1:5186 und http://localhost:5186, Sync ausschließlich in diesem gestarteten Prozess aktiviert. Nutzer hat beide Anmeldungen bestätigt. Arc: Übung QA · Kniebeuge · Sync-Test und Workout QA · Ein Satz · Sync-Test angelegt, Session abgeschlossen. Datenbank bestätigt complete, Revision 3. Zweiter Ursprung unabhängig angemeldet, 1 Übung/1 Workout/1 Session mit Status Synchronisiert geladen. Zusätzlicher Tab im ersten Ursprung zeigt korrekt Schreibschutz. QA-Datensätze bleiben ausdrücklich als solche gekennzeichnet im Nutzer-Testkonto; keine echten Nutzerdaten gelöscht.
+
+WICHTIG: Paralleler Notiztest in zwei Clients hat eine ältere Formularfassung mit aktualisierter Basisrevision übertragen, statt einen Konflikt auszulösen. Dialogschutz ergänzt (Zähler und tatsächlicher offener Dialog), erneute Zwei-Client-Konfliktprüfung noch NICHT bestanden. Daher keine geschlossene Testfreigabe.
+
+Importdialog schließt erst nach erfolgreicher lokaler Speicherung, Fehler bleiben sichtbar. Neueste lokale Konfliktfassung wird gezeigt; Serverübernahme erfordert vorherigen Export. Permanente Serverfehler stoppen automatische Wiederholungen. 93 Tests einschließlich echter Hook-/IndexedDB-Abläufe mit simuliertem Transport bestehen. Echte Offline-/Konflikt-/Gastimport-Browserabnahme und physische Gerätetests bleiben offen.

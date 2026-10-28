@@ -1,3 +1,4 @@
+import { hasOpenEditor, onEditorsClosed } from "./editGuard";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { validateState, type AppState } from "../domain/model";
 import { loadState, saveState } from "./storage";
@@ -11,6 +12,7 @@ import {
 } from "./accountStore";
 import { cloudTransport } from "./cloud";
 import { drain, type SyncConflict } from "./sync";
+import { classifySyncFailure } from "./syncFailure";
 import { mergeGuest } from "./reconcile";
 
 // One lease per browser document, shared across React StrictMode remounts.
@@ -54,6 +56,7 @@ export function useStore() {
     let last: string | null | undefined;
     let busy = false;
     let writable = false;
+    let halted = false;
     let requested = false;
     let attempts = 0;
     let retryTimer: number | undefined;
@@ -63,7 +66,7 @@ export function useStore() {
     async function sync() {
       const id = owner.current,
         version = epoch.current;
-      if (!id || !writable || !navigator.onLine) return;
+      if (!id || !writable || !navigator.onLine || halted) return;
       if (busy) {
         requested = true;
         return;
@@ -86,6 +89,7 @@ export function useStore() {
           );
           if (conflict) {
             if (version === epoch.current) {
+              halted = true;
               setConflict(conflict);
               status("conflict");
               setError(
@@ -97,6 +101,7 @@ export function useStore() {
         }
         await writes.current;
         if (version !== epoch.current) return;
+        const pullSequence = writeSequence.current;
         const fresh = await transport.pull(signal);
         attempts = 0;
         if (version !== epoch.current) return;
@@ -105,6 +110,9 @@ export function useStore() {
           if (version !== epoch.current) return;
           const latest = await loadAccount(id);
           if (
+            (Boolean(latest) && hasOpenEditor()) ||
+            dirty.current ||
+            writeSequence.current !== pullSequence ||
             latest?.outbox.length ||
             latest?.state.sessions.some((s) => s.status === "active")
           ) {
@@ -118,7 +126,11 @@ export function useStore() {
             [],
             fresh.revisions,
           );
-          if (version === epoch.current) {
+          if (
+            version === epoch.current &&
+            writeSequence.current === pullSequence &&
+            !dirty.current
+          ) {
             generation.current = fresh.generation;
             current.current = fresh.state;
             setState(fresh.state);
@@ -129,15 +141,10 @@ export function useStore() {
         await writes.current;
       } catch (failure) {
         if (alive && version === epoch.current) {
-          const code = (failure as { code?: string })?.code;
-          status(
-            code === "PGRST301" || code === "42501"
-              ? "auth"
-              : navigator.onLine
-                ? "error"
-                : "offline",
-          );
-          if (!code && attempts < 5) {
+          const kind = classifySyncFailure(failure, navigator.onLine);
+          status(kind);
+          halted = ["auth", "quota", "validation", "generation"].includes(kind);
+          if (!halted && attempts < 5) {
             window.clearTimeout(retryTimer);
             retryTimer = window.setTimeout(
               () => {
@@ -161,7 +168,11 @@ export function useStore() {
         }
       }
     }
-    synchronize.current = sync;
+    synchronize.current = async () => {
+      halted = false;
+      attempts = 0;
+      await sync();
+    };
     async function switchOwner(id: string | null) {
       if (last === id) return;
       last = id;
@@ -176,6 +187,7 @@ export function useStore() {
       setError("");
       setConflict(null);
       attempts = 0;
+      halted = false;
       window.clearTimeout(retryTimer);
       status("loading");
       try {
@@ -199,7 +211,9 @@ export function useStore() {
           generation.current = local.generation;
           current.current = local.state;
           setState(local.state);
-          status(navigator.onLine ? "pending" : "offline");
+          status(
+            !permission ? "readonly" : navigator.onLine ? "pending" : "offline",
+          );
         }
         if (!navigator.onLine && !local) {
           setError(
@@ -240,6 +254,9 @@ export function useStore() {
       }, 0);
     });
     if (!client || !accountSyncEnabled) void switchOwner(null);
+    const stopEditorListener = onEditorsClosed(() => {
+      if (alive) void sync();
+    });
     const online = () => {
       void sync();
     };
@@ -257,6 +274,7 @@ export function useStore() {
     }, 60000);
     return () => {
       alive = false;
+      stopEditorListener();
       epoch.current++;
       control.current.abort();
       subscription?.data.subscription.unsubscribe();
@@ -272,6 +290,7 @@ export function useStore() {
       version = epoch.current;
     const writeGeneration = generation.current;
     const sequence = ++writeSequence.current;
+    let succeeded = true;
     dirty.current = true;
     setSaving(true);
     writes.current = writes.current
@@ -289,6 +308,7 @@ export function useStore() {
         }
       })
       .catch(() => {
+        succeeded = false;
         if (version === epoch.current)
           setError(
             "Speichern fehlgeschlagen / Save failed. Bitte Backup exportieren / Please export a backup.",
@@ -300,6 +320,7 @@ export function useStore() {
     void writes.current.then(() => {
       if (version === epoch.current) void synchronize.current();
     });
+    return writes.current.then(() => succeeded && version === epoch.current);
   }, []);
   const update = useCallback(
     (fn: (s: AppState) => AppState) => {
@@ -340,19 +361,20 @@ export function useStore() {
       }
     },
     importGuest: async () => {
-      if (!owner.current || readonly) return;
+      if (!owner.current || readonly) return false;
       const version = epoch.current;
       try {
         const guest = await loadState();
-        if (version !== epoch.current || !current.current) return;
+        if (version !== epoch.current || !current.current) return false;
         const next = mergeGuest(current.current, guest);
         current.current = next;
         setState(next);
-        persist(next);
+        return await persist(next);
       } catch {
         setError(
-          "Übernahme abgebrochen: kollidierende IDs oder aktive Sessions. Bitte beide Bereiche exportieren. / Import cancelled: conflicting IDs or active sessions. Export both areas.",
+          "Übernahme abgebrochen: Check-ins am selben Datum oder aktive Sessions prüfen. Bitte beide Bereiche exportieren. / Import cancelled: review check-ins on the same date or active sessions. Export both areas.",
         );
+        return false;
       }
     },
     retry: () => {

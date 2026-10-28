@@ -1,3 +1,4 @@
+import { accountSyncEnabled } from "./data/client";
 import { SyncPanel, syncLabel } from "./ui/SyncPanel";
 import { t as tr } from "./i18n";
 import { setLanguage, useLanguage } from "./i18n";
@@ -306,7 +307,11 @@ export function App() {
           </span>
           <span>
             <ShieldCheck size={14} />
-            {tr("Deine Daten bleiben auf diesem Gerät.")}
+            {store.accountOwner
+              ? state.preferences.language === "en"
+                ? "Your account data syncs with Supabase."
+                : "Deine Kontodaten werden mit Supabase synchronisiert."
+              : tr("Deine Daten bleiben auf diesem Gerät.")}
           </span>
         </footer>
       </div>
@@ -355,6 +360,7 @@ export function App() {
           update={update}
           syncPanel={
             <SyncPanel
+              state={state}
               key={store.accountOwner ?? "guest"}
               owner={store.accountOwner}
               status={syncStatus}
@@ -841,9 +847,13 @@ function Settings({
         {tr("Eigene Namen und Notizen werden nicht übersetzt.")}
       </p>
       <p>
-        {tr(
-          "Eúzēn speichert dein Training in diesem Browser auf diesem Gerät. Es gibt noch keinen Cloud-Sync. Gelöschte Browserdaten können nicht wiederhergestellt werden – bewahre regelmäßig ein Backup auf.",
-        )}
+        {accountSyncEnabled
+          ? state.preferences.language === "en"
+            ? "Guest data stays on this device. Signed-in training data syncs with your account. Keep regular backups."
+            : "Gastdaten bleiben auf diesem Gerät. Angemeldete Trainingsdaten werden mit deinem Konto synchronisiert. Bewahre regelmäßig ein Backup auf."
+          : tr(
+              "Eúzēn speichert dein Training in diesem Browser auf diesem Gerät. Es gibt noch keinen Cloud-Sync. Gelöschte Browserdaten können nicht wiederhergestellt werden – bewahre regelmäßig ein Backup auf.",
+            )}
       </p>
       <div className="callout">
         <ShieldCheck size={20} />

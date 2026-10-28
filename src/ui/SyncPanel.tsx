@@ -2,11 +2,28 @@ import { useState } from "react";
 import { getLanguage, useLanguage } from "../i18n";
 import { loadState, exportState } from "../data/storage";
 import type { AppState } from "../domain/model";
+import { entities } from "../data/sync";
 import type { SyncConflict } from "../data/sync";
 export function syncLabel(status: string, saving: boolean) {
   const en = getLanguage() === "en";
   if (saving) return en ? "Saving locally…" : "Wird lokal gespeichert …";
   const labels: Record<string, [string, string]> = {
+    readonly: [
+      "Lesemodus · anderer Tab bearbeitet",
+      "Read-only · another tab is editing",
+    ],
+    quota: [
+      "Speichergrenze erreicht · Backup exportieren",
+      "Storage limit reached · export a backup",
+    ],
+    validation: [
+      "Änderung nicht angenommen · Daten prüfen",
+      "Change rejected · review data",
+    ],
+    generation: [
+      "Kontobestand wurde zurückgesetzt · lokales Backup exportieren",
+      "Account was reset · export a local backup",
+    ],
     guest: ["Gastbereich · lokal gespeichert", "Guest area · saved locally"],
     loading: ["Konto wird geladen …", "Loading account…"],
     pending: [
@@ -22,6 +39,7 @@ export function syncLabel(status: string, saving: boolean) {
   return (labels[status] ?? labels.error)[en ? 1 : 0];
 }
 export function SyncPanel({
+  state,
   owner,
   status,
   saving,
@@ -30,19 +48,29 @@ export function SyncPanel({
   resolve,
   importGuest,
 }: {
+  state: AppState;
   owner: string | null;
   status: string;
   saving: boolean;
   readonly: boolean;
   conflict: SyncConflict | null;
   resolve: (choice: "local" | "server") => Promise<void>;
-  importGuest: () => Promise<void>;
+  importGuest: () => Promise<boolean>;
 }) {
   useLanguage();
   const en = getLanguage() === "en";
   const [guest, setGuest] = useState<AppState | null>(null);
   const [backedUp, setBackedUp] = useState(false);
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [conflictBackup, setConflictBackup] = useState(false);
+  const local = conflict
+    ? (entities(state).find(
+        (e) =>
+          e.kind === conflict.operation.kind &&
+          e.id === conflict.operation.entityId,
+      )?.payload ?? null)
+    : null;
   return (
     <section aria-label={en ? "Synchronization" : "Synchronisierung"}>
       <p role="status" aria-live="polite">
@@ -67,7 +95,7 @@ export function SyncPanel({
               {en ? "Local pending operation" : "Lokale ausstehende Änderung"}
             </h4>
             <pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
-              {JSON.stringify(conflict.operation.payload, null, 2)}
+              {JSON.stringify(local, null, 2)}
             </pre>
             <h4>Server</h4>
             <pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
@@ -85,8 +113,22 @@ export function SyncPanel({
           </button>
           <button
             className="btn"
-            disabled={readonly || saving}
-            onClick={() => void resolve("server")}
+            onClick={() => {
+              exportState(state);
+              setConflictBackup(true);
+            }}
+          >
+            {en
+              ? "Export local version first"
+              : "Lokale Fassung vorher exportieren"}
+          </button>
+          <button
+            className="btn"
+            disabled={readonly || saving || !conflictBackup}
+            onClick={() => {
+              setConflictBackup(false);
+              void resolve("server");
+            }}
           >
             {en ? "Use server version" : "Serverfassung übernehmen"}
           </button>
@@ -129,8 +171,8 @@ export function SyncPanel({
               </p>
               <p>
                 {en
-                  ? "Guest data stays unchanged. Imported IDs use a separate namespace. Repeating the same import skips identical entries; conflicting check-ins on the same date require review. Preferences are kept from your account."
-                  : "Gastdaten bleiben unverändert. Importierte IDs erhalten einen eigenen Namensraum. Wiederholte identische Übernahmen werden übersprungen; abweichende Check-ins am selben Datum müssen geprüft werden. Kontoeinstellungen bleiben erhalten."}
+                  ? "Guest data stays unchanged. Imported IDs use a separate namespace. Repeating the same import skips identical entries; conflicting check-ins on the same date require review. Preferences are kept from your account. A changed guest snapshot is imported as a new copy; two active sessions cannot be merged."
+                  : "Gastdaten bleiben unverändert. Importierte IDs erhalten einen eigenen Namensraum. Wiederholte identische Übernahmen werden übersprungen; abweichende Check-ins am selben Datum müssen geprüft werden. Kontoeinstellungen bleiben erhalten. Ein geänderter Gastbestand wird als neue Kopie importiert; zwei aktive Sessions können nicht zusammengeführt werden."}
               </p>
               <button
                 className="btn"
@@ -143,10 +185,22 @@ export function SyncPanel({
               </button>
               <button
                 className="btn primary"
-                disabled={!backedUp || saving || readonly}
-                onClick={() => {
-                  void importGuest();
-                  setGuest(null);
+                disabled={!backedUp || saving || readonly || busy}
+                onClick={async () => {
+                  setBusy(true);
+                  setError("");
+                  try {
+                    const success = await importGuest();
+                    if (success) setGuest(null);
+                    else
+                      setError(
+                        en
+                          ? "Import not saved. Review the error and retry; guest data is unchanged."
+                          : "Übernahme nicht gespeichert. Fehler prüfen und erneut versuchen; Gastdaten sind unverändert.",
+                      );
+                  } finally {
+                    setBusy(false);
+                  }
                 }}
               >
                 {en

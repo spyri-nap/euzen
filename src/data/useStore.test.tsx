@@ -56,6 +56,11 @@ async function signIn(id: string | null) {
   await settle();
 }
 beforeEach(async () => {
+  await new Promise<void>((resolve, reject) => {
+    const r = indexedDB.deleteDatabase("euzen-accounts");
+    r.onsuccess = () => resolve();
+    r.onerror = () => reject(r.error);
+  });
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
   harness.pull.mockReset();
   harness.push.mockReset();
@@ -135,4 +140,98 @@ it("ignores a late initial pull after changing accounts", async () => {
   await settle();
   expect(container.textContent).not.toContain("Other account");
   expect(store.accountOwner).toBe(owner);
+});
+
+it("returns a durable import result and preserves the source through repeat imports", async () => {
+  const guest = {
+    ...emptyState(),
+    weeklyPlans: [{ id: "week", name: "Guest week", startDate: "2026-10-28" }],
+  };
+  await saveState(guest);
+  await signIn(owner);
+  harness.push.mockRejectedValue({ code: "54000", message: "quota" });
+  let success = false;
+  await act(async () => {
+    success = await store.importGuest();
+  });
+  await settle();
+  expect(success).toBe(true);
+  expect((await loadAccount(owner))?.state.weeklyPlans).toHaveLength(1);
+  await act(async () => {
+    success = await store.importGuest();
+  });
+  await settle();
+  expect(success).toBe(true);
+  expect((await loadAccount(owner))?.state.weeklyPlans).toHaveLength(1);
+  expect(await loadState()).toEqual(guest);
+});
+it("reports an offline initial account without fabricating or persisting an empty account", async () => {
+  Object.defineProperty(navigator, "onLine", {
+    configurable: true,
+    value: false,
+  });
+  try {
+    await signIn(other);
+    expect(store.state).toBeNull();
+    expect(store.syncStatus).toBe("offline");
+    expect(await loadAccount(other)).toBeNull();
+    expect(harness.pull).not.toHaveBeenCalled();
+  } finally {
+    Object.defineProperty(navigator, "onLine", {
+      configurable: true,
+      value: true,
+    });
+  }
+});
+
+it("does not overwrite a local edit made during an in-flight cloud pull", async () => {
+  await signIn(owner);
+  let finish!: (value: unknown) => void;
+  harness.pull.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+  await act(async () => store.retry());
+  await settle();
+  harness.push.mockRejectedValue({ code: "54000", message: "quota" });
+  await act(async () =>
+    store.update((s) => ({
+      ...s,
+      weeklyPlans: [
+        { id: "during-pull", name: "Keep me", startDate: "2026-10-28" },
+      ],
+    })),
+  );
+  await settle();
+  await act(async () =>
+    finish({ owner, generation: 1, state: emptyState(), revisions: {} }),
+  );
+  await settle();
+  expect(store.state?.weeklyPlans[0].name).toBe("Keep me");
+  expect((await loadAccount(owner))?.state.weeklyPlans[0].name).toBe("Keep me");
+});
+
+it("preserves the editing base while a dialog is open and resumes pull after closing", async () => {
+  await signIn(owner);
+  const { holdEditor } = await import("./editGuard");
+  const release = holdEditor();
+  harness.pull.mockResolvedValue({
+    owner,
+    generation: 1,
+    state: {
+      ...emptyState(),
+      weeklyPlans: [
+        { id: "remote", name: "Remote revision", startDate: "2026-10-28" },
+      ],
+    },
+    revisions: {},
+  });
+  await act(async () => store.retry());
+  await settle();
+  expect(store.state?.weeklyPlans).toEqual([]);
+  await act(async () => release());
+  await settle();
+  expect(store.state?.weeklyPlans[0].name).toBe("Remote revision");
 });

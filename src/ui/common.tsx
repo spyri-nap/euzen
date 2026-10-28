@@ -1,3 +1,4 @@
+import { holdEditor } from "../data/editGuard";
 import { t as tr } from "../i18n";
 import { useEffect, useRef, type ReactNode } from "react";
 import { X, ArrowRight, Leaf } from "lucide-react";
@@ -17,7 +18,11 @@ export function Modal({
   useEffect(() => {
     const dialog = ref.current!;
     dialog.showModal();
-    return () => dialog.close();
+    const release = holdEditor();
+    return () => {
+      dialog.close();
+      release();
+    };
   }, []);
   return (
     <dialog
