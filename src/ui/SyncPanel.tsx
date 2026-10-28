@@ -40,6 +40,8 @@ export function syncLabel(status: string, saving: boolean) {
 }
 export function SyncPanel({
   state,
+  recoverGeneration,
+  exportRecovery,
   owner,
   status,
   saving,
@@ -49,6 +51,8 @@ export function SyncPanel({
   importGuest,
 }: {
   state: AppState;
+  recoverGeneration: () => Promise<boolean>;
+  exportRecovery: () => Promise<void>;
   owner: string | null;
   status: string;
   saving: boolean;
@@ -138,6 +142,48 @@ export function SyncPanel({
               : "Zum Aufschieben Einstellungen schließen. Ein Backup erhält die lokale Fassung vor einer Auswahl."}
           </p>
         </div>
+      )}
+      {owner && status === "generation" && (
+        <div>
+          <p>
+            {en
+              ? "Your account was reset elsewhere. Export your local version before accepting the new generation. The old local version will also be archived."
+              : "Dein Konto wurde anderswo zurückgesetzt. Exportiere deinen lokalen Stand, bevor du den neuen Kontostand übernimmst. Der alte lokale Stand wird zusätzlich archiviert."}
+          </p>
+          <button
+            className="btn"
+            onClick={() => {
+              exportState(state);
+              setConflictBackup(true);
+            }}
+          >
+            {en ? "Export local backup" : "Lokales Backup exportieren"}
+          </button>
+          <button
+            className="btn"
+            disabled={!conflictBackup || readonly || saving}
+            onClick={async () => {
+              if (!(await recoverGeneration()))
+                setError(
+                  en
+                    ? "Recovery failed; data preserved."
+                    : "Wiederherstellung fehlgeschlagen; Daten bleiben erhalten.",
+                );
+              setConflictBackup(false);
+            }}
+          >
+            {en
+              ? "Accept new account generation"
+              : "Neuen Kontostand übernehmen"}
+          </button>
+        </div>
+      )}
+      {owner && (
+        <button className="text-button" onClick={() => void exportRecovery()}>
+          {en
+            ? "Export latest archived recovery, if available"
+            : "Letzten archivierten Stand exportieren, falls vorhanden"}
+        </button>
       )}
       {owner && (
         <>

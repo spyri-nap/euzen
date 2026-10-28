@@ -1,6 +1,7 @@
 import { readdir, readFile, writeFile, mkdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { deflateSync } from "node:zlib";
+const outDir = process.argv[2] ?? "dist";
 // Small code-native E monogram. PNGs use a mask-safe central drawing.
 function crc(b) {
   let c = 0xffffffff;
@@ -18,7 +19,7 @@ function chunk(type, data) {
   c.writeUInt32BE(crc(Buffer.concat([t, data])));
   return Buffer.concat([n, t, data, c]);
 }
-await mkdir("dist/icons", { recursive: true });
+await mkdir(`${outDir}/icons`, { recursive: true });
 for (const size of [180, 192, 512]) {
   const raw = Buffer.alloc((size * 3 + 1) * size);
   for (let y = 0; y < size; y++)
@@ -41,7 +42,7 @@ for (const size of [180, 192, 512]) {
   h[8] = 8;
   h[9] = 2;
   await writeFile(
-    `dist/icons/icon-${size}.png`,
+    `${outDir}/icons/icon-${size}.png`,
     Buffer.concat([
       Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
       chunk("IHDR", h),
@@ -59,16 +60,16 @@ async function files(dir) {
     )
   ).flat();
 }
-const assets = (await files("dist"))
+const assets = (await files(outDir))
   .filter((p) => !p.endsWith("/sw.js"))
-  .map((p) => "/" + p.slice(5))
+  .map((p) => "/" + p.slice(outDir.length + 1))
   .sort();
 const hash = createHash("sha256");
-for (const file of assets) hash.update(await readFile("dist" + file));
+for (const file of assets) hash.update(await readFile(outDir + file));
 const build = hash.digest("hex").slice(0, 12);
 const template = await readFile("scripts/sw.js", "utf8");
 await writeFile(
-  "dist/sw.js",
+  `${outDir}/sw.js`,
   template
     .replace("__BUILD__", build)
     .replace("__ASSETS__", JSON.stringify(assets)),

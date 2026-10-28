@@ -1,4 +1,4 @@
-import { withEditBasis } from "./data/editBasis";
+import { withReplacementBasis, withStateEditBasis } from "./data/editBasis";
 import { accountSyncEnabled } from "./data/client";
 import { SyncPanel, syncLabel } from "./ui/SyncPanel";
 import { t as tr } from "./i18n";
@@ -344,30 +344,37 @@ export function App() {
       )}
       {editor && state.exercises.length > 0 && (
         <Editor
+          key={`${store.accountOwner ?? "guest"}:${store.accountGeneration}:${editor === "new" ? "new" : editor.id}`}
+          scope={`${store.accountOwner ?? "guest"}:${store.accountGeneration}`}
+          existingTemplateIds={state.templates.map((t) => t.id)}
           template={editor === "new" ? undefined : editor}
           exercises={state.exercises}
           onClose={() => setEditor(null)}
-          onSave={(t) => {
-            if (editor !== "new") t = withEditBasis(editor, t);
-            update((s) => ({
+          onSave={async (t) => {
+            const saved = await update((s) => ({
               ...s,
               templates: s.templates.some((x) => x.id === t.id)
                 ? s.templates.map((x) => (x.id === t.id ? t : x))
                 : [...s.templates, t],
             }));
+            if (!saved) return false;
             setEditor(null);
             setView("plan");
             setToast("Dein Workout ist gespeichert.");
+            return true;
           }}
         />
       )}
       {settings && (
         <Settings
+          readonly={readonly}
           state={state}
           update={update}
           syncPanel={
             <SyncPanel
               state={state}
+              recoverGeneration={store.recoverGeneration}
+              exportRecovery={store.exportRecovery}
               key={store.accountOwner ?? "guest"}
               owner={store.accountOwner}
               status={syncStatus}
@@ -461,7 +468,7 @@ function Today({
   ).length;
   const stats = summary(state.sessions);
   const checkin = state.checkins.find((c) => c.date === today);
-  const [checking, setChecking] = useState(false);
+  const [checking, setChecking] = useState<AppState | null>(null);
   return (
     <>
       <div className="page-heading">
@@ -545,7 +552,7 @@ function Today({
                   "Ein kleiner Check-in hilft dir, bewusst in dein Training zu gehen.",
                 )}
           </p>
-          <button className="btn full" onClick={() => setChecking(true)}>
+          <button className="btn full" onClick={() => setChecking(state)}>
             {checkin ? tr("Check-in bearbeiten") : tr("Mein Check-in")}
             <ArrowRight size={16} />
           </button>
@@ -723,16 +730,20 @@ function Today({
         <Checkin
           energy={checkin?.energy ?? 3}
           recovery={checkin?.recovery ?? 3}
-          onClose={() => setChecking(false)}
+          onClose={() => setChecking(null)}
           onSave={(energy, recovery) => {
             update((s) => ({
               ...s,
               checkins: [
                 ...s.checkins.filter((c) => c.date !== today),
-                { date: today, energy, recovery },
+                withStateEditBasis(checking, "checkin", today, {
+                  date: today,
+                  energy,
+                  recovery,
+                }),
               ],
             }));
-            setChecking(false);
+            setChecking(null);
           }}
         />
       )}
@@ -794,191 +805,212 @@ function Checkin({
   );
 }
 function Settings({
+  readonly,
   syncPanel,
   state,
   update,
   onClose,
 }: {
+  readonly: boolean;
   syncPanel?: import("react").ReactNode;
   state: AppState;
-  update: (fn: (s: AppState) => AppState) => void;
+  update: (fn: (s: AppState) => AppState) => Promise<boolean>;
   onClose: () => void;
 }) {
   const [incoming, setIncoming] = useState<AppState | null>(null);
+  const [incomingBase, setIncomingBase] = useState<AppState | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [restoring, setRestoring] = useState(false);
   return (
     <Modal title={tr("Deine Daten. Dein Raum.")} onClose={onClose}>
-      <Suspense
-        fallback={
-          <p role="status">{tr("Dein Raum für Bewegung wird geöffnet …")}</p>
-        }
-      >
-        <Account />
-        {syncPanel}
-      </Suspense>
-      <Field label={tr("Sprache der Oberfläche")}>
-        <select
-          value={state.preferences.language}
-          onChange={(e) =>
-            update((s) => ({
-              ...s,
-              preferences: {
-                ...s.preferences,
-                language: e.target.value as "de" | "en",
-              },
-            }))
+      <fieldset className="app-fieldset" disabled={readonly}>
+        <Suspense
+          fallback={
+            <p role="status">{tr("Dein Raum für Bewegung wird geöffnet …")}</p>
           }
         >
-          <option value="de" lang="de">
-            Deutsch
-          </option>
-          <option value="en" lang="en">
-            English
-          </option>
-        </select>
-      </Field>
-      <button
-        className="btn"
-        onClick={() => {
-          update((s) => ({
-            ...s,
-            preferences: { ...s.preferences, onboardingStep: 0 },
-          }));
-          onClose();
-        }}
-      >
-        {tr("Einführung erneut öffnen")}
-      </button>
-      <p className="hint">
-        {tr("Eigene Namen und Notizen werden nicht übersetzt.")}
-      </p>
-      <p>
-        {accountSyncEnabled
-          ? state.preferences.language === "en"
-            ? "Guest data stays on this device. Signed-in training data syncs with your account. Keep regular backups."
-            : "Gastdaten bleiben auf diesem Gerät. Angemeldete Trainingsdaten werden mit deinem Konto synchronisiert. Bewahre regelmäßig ein Backup auf."
-          : tr(
-              "Eúzēn speichert dein Training in diesem Browser auf diesem Gerät. Es gibt noch keinen Cloud-Sync. Gelöschte Browserdaten können nicht wiederhergestellt werden – bewahre regelmäßig ein Backup auf.",
-            )}
-      </p>
-      <div className="callout">
-        <ShieldCheck size={20} />
-        {tr(
-          "Keine Werbetracker. Keine externen KI-Anfragen. Keine verbundenen Gesundheitsdienste.",
-        )}
-      </div>
-      <div className="settings-counts">
-        <span>
-          {state.exercises.length}
-          {tr(" Übungen")}
-        </span>
-        <span>
-          {state.templates.length}
-          {tr(" Workouts")}
-        </span>
-        <span>
-          {state.sessions.length}
-          {tr(" Sessions")}
-        </span>
-      </div>
-      <button className="btn primary full" onClick={() => exportState(state)}>
-        <ArrowDownToLine size={18} />
-        {tr("JSON-Backup exportieren")}
-      </button>
-      <label className="btn full upload-label">
-        <Upload size={18} />
-        {tr("Backup zum Prüfen auswählen")}
-        <input
-          type="file"
-          accept="application/json,.json"
-          onChange={async (e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            setIncoming(null);
-            setError("");
-            try {
-              if (file.size > 15_000_000) throw new Error();
-              const parsed = parseBackup(await file.text());
-              setIncoming(parsed);
-            } catch {
-              setError(
-                "Das Backup ist ungültig, zu groß oder hat eine nicht unterstützte Version. Bestehende Daten wurden nicht verändert.",
-              );
+          <Account />
+          {syncPanel}
+        </Suspense>
+        <Field label={tr("Sprache der Oberfläche")}>
+          <select
+            value={state.preferences.language}
+            onChange={(e) =>
+              update((s) => ({
+                ...s,
+                preferences: {
+                  ...s.preferences,
+                  language: e.target.value as "de" | "en",
+                },
+              }))
             }
-            e.target.value = "";
-          }}
-        />
-      </label>
-      {incoming && (
-        <div className="import-preview">
-          <h3>{tr("Geprüftes Backup · Version 1")}</h3>
-          <p>
-            {incoming.templates.length}
-            {tr(" Workouts, ")}
-            {incoming.sessions.length} {tr("Sessions und ")}
-            {incoming.scheduled.length}
-            {tr(" Planeinträge.")}
-          </p>
-          <p>
-            {tr(
-              "Der Import ersetzt die lokalen Daten. Vorher wird automatisch ein Backup des aktuellen Stands heruntergeladen.",
-            )}
-          </p>
-          <div className="button-row">
-            <button className="btn" onClick={() => setIncoming(null)}>
-              {tr("Abbrechen")}
-            </button>
-            <button
-              className="btn primary"
-              onClick={() => {
-                exportState(state);
-                update(() => incoming);
-                setIncoming(null);
-                setMessage("Backup übernommen.");
-              }}
-            >
-              {tr("Backup herunterladen & ersetzen")}
-            </button>
-          </div>
-        </div>
-      )}
-      {error && (
-        <p className="error" role="alert">
-          {tr(error)}
-        </p>
-      )}
-      {message && <p role="status">{tr(message)}</p>}
-      <hr />
-      <label className="checkbox-row">
-        <input
-          type="checkbox"
-          checked={state.preferences.audio}
-          onChange={(e) =>
+          >
+            <option value="de" lang="de">
+              Deutsch
+            </option>
+            <option value="en" lang="en">
+              English
+            </option>
+          </select>
+        </Field>
+        <button
+          className="btn"
+          onClick={() => {
             update((s) => ({
               ...s,
-              preferences: { ...s.preferences, audio: e.target.checked },
-            }))
-          }
-        />
-        {tr("Optionale Timer-Töne aktivieren")}
-      </label>
-      <p className="hint">
-        {tr(
-          "Starte den Timer einmal per Klick, damit der Browser Audio freigeben kann. Signale im Hintergrund sind nicht garantiert.",
-        )}
-      </p>
-      <details>
-        <summary>
-          <CircleHelp size={16} />
-          {tr("Über dieses Grundgerüst")}
-        </summary>
+              preferences: { ...s.preferences, onboardingStep: 0 },
+            }));
+            onClose();
+          }}
+        >
+          {tr("Einführung erneut öffnen")}
+        </button>
+        <p className="hint">
+          {tr("Eigene Namen und Notizen werden nicht übersetzt.")}
+        </p>
         <p>
+          {accountSyncEnabled
+            ? state.preferences.language === "en"
+              ? "Guest data stays on this device. Signed-in training data syncs with your account. Keep regular backups."
+              : "Gastdaten bleiben auf diesem Gerät. Angemeldete Trainingsdaten werden mit deinem Konto synchronisiert. Bewahre regelmäßig ein Backup auf."
+            : tr(
+                "Eúzēn speichert dein Training in diesem Browser auf diesem Gerät. Es gibt noch keinen Cloud-Sync. Gelöschte Browserdaten können nicht wiederhergestellt werden – bewahre regelmäßig ein Backup auf.",
+              )}
+        </p>
+        <div className="callout">
+          <ShieldCheck size={20} />
           {tr(
-            "Version 0.5 · Sprache Deutsch. Datenformat mit Schema-Versionierung. Vorlagen dienen der allgemeinen Trainingsplanung; passe sie an deine Erfahrung und deine Möglichkeiten an.",
+            "Keine Werbetracker. Keine externen KI-Anfragen. Keine verbundenen Gesundheitsdienste.",
+          )}
+        </div>
+        <div className="settings-counts">
+          <span>
+            {state.exercises.length}
+            {tr(" Übungen")}
+          </span>
+          <span>
+            {state.templates.length}
+            {tr(" Workouts")}
+          </span>
+          <span>
+            {state.sessions.length}
+            {tr(" Sessions")}
+          </span>
+        </div>
+        <button className="btn primary full" onClick={() => exportState(state)}>
+          <ArrowDownToLine size={18} />
+          {tr("JSON-Backup exportieren")}
+        </button>
+        <label className="btn full upload-label">
+          <Upload size={18} />
+          {tr("Backup zum Prüfen auswählen")}
+          <input
+            type="file"
+            accept="application/json,.json"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setIncoming(null);
+              setError("");
+              try {
+                if (file.size > 15_000_000) throw new Error();
+                const parsed = parseBackup(await file.text());
+                setIncomingBase(state);
+                setIncoming(parsed);
+              } catch {
+                setError(
+                  "Das Backup ist ungültig, zu groß oder hat eine nicht unterstützte Version. Bestehende Daten wurden nicht verändert.",
+                );
+              }
+              e.target.value = "";
+            }}
+          />
+        </label>
+        {incoming && (
+          <div className="import-preview">
+            <h3>{tr("Geprüftes Backup · Version 1")}</h3>
+            <p>
+              {incoming.templates.length}
+              {tr(" Workouts, ")}
+              {incoming.sessions.length} {tr("Sessions und ")}
+              {incoming.scheduled.length}
+              {tr(" Planeinträge.")}
+            </p>
+            <p>
+              {tr(
+                "Der Import ersetzt die lokalen Daten. Vorher wird automatisch ein Backup des aktuellen Stands heruntergeladen.",
+              )}
+            </p>
+            <div className="button-row">
+              <button className="btn" onClick={() => setIncoming(null)}>
+                {tr("Abbrechen")}
+              </button>
+              <button
+                className="btn primary"
+                disabled={restoring}
+                onClick={async () => {
+                  setRestoring(true);
+                  exportState(state);
+                  try {
+                    const saved = await update(() =>
+                      withReplacementBasis(incomingBase ?? state, incoming),
+                    );
+                    if (!saved) {
+                      setError(
+                        "Speichern fehlgeschlagen. Bestehendes Backup und Entwurf bleiben erhalten.",
+                      );
+                      return;
+                    }
+                    setIncoming(null);
+                    setMessage("Backup übernommen.");
+                  } finally {
+                    setRestoring(false);
+                  }
+                }}
+              >
+                {tr("Backup herunterladen & ersetzen")}
+              </button>
+            </div>
+          </div>
+        )}
+        {error && (
+          <p className="error" role="alert">
+            {tr(error)}
+          </p>
+        )}
+        {message && <p role="status">{tr(message)}</p>}
+        <hr />
+        <label className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={state.preferences.audio}
+            onChange={(e) =>
+              update((s) => ({
+                ...s,
+                preferences: { ...s.preferences, audio: e.target.checked },
+              }))
+            }
+          />
+          {tr("Optionale Timer-Töne aktivieren")}
+        </label>
+        <p className="hint">
+          {tr(
+            "Starte den Timer einmal per Klick, damit der Browser Audio freigeben kann. Signale im Hintergrund sind nicht garantiert.",
           )}
         </p>
-      </details>
+        <details>
+          <summary>
+            <CircleHelp size={16} />
+            {tr("Über dieses Grundgerüst")}
+          </summary>
+          <p>
+            {tr(
+              "Version 0.6 · Sprache Deutsch. Datenformat mit Schema-Versionierung. Vorlagen dienen der allgemeinen Trainingsplanung; passe sie an deine Erfahrung und deine Möglichkeiten an.",
+            )}
+          </p>
+        </details>
+      </fieldset>
     </Modal>
   );
 }

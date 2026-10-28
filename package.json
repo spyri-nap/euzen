@@ -1,7 +1,7 @@
 {
   "name": "euzen",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
@@ -10,7 +10,9 @@
     "test": "vitest run",
     "check": "tsc -b",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "build:test": "node scripts/build-test.mjs",
+    "preview:test": "vite preview --host 127.0.0.1 --port 5186 --strictPort --outDir dist-test"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",

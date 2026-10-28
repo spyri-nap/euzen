@@ -1,3 +1,4 @@
+export let localSignOutInProgress = false;
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
@@ -137,8 +138,13 @@ export class AccountService {
   }
   async signOut() {
     return this.exclusive(async () => {
-      const { error } = await this.client.auth.signOut({ scope: "local" });
-      if (error) throw new AccountError("request_failed");
+      localSignOutInProgress = true;
+      try {
+        const { error } = await this.client.auth.signOut({ scope: "local" });
+        if (error) throw new AccountError("request_failed");
+      } finally {
+        localSignOutInProgress = false;
+      }
     });
   }
 }

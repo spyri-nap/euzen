@@ -93,8 +93,8 @@ export const english: Record<string, string> = {
   Workout: "Workout",
   "Eúzēn ist bereits in einem anderen Tab geöffnet. Schließe den anderen Tab und lade diese Ansicht neu, um Änderungen zu speichern.":
     "Eúzēn is already open in another tab. Close that tab and reload this view to save changes.",
-  "Version 0.5 · Sprache Deutsch. Datenformat mit Schema-Versionierung. Vorlagen dienen der allgemeinen Trainingsplanung; passe sie an deine Erfahrung und deine Möglichkeiten an.":
-    "Version 0.5 · German and English. Versioned data format. Templates are for general training planning; adapt them to your experience and capabilities.",
+  "Version 0.6 · Sprache Deutsch. Datenformat mit Schema-Versionierung. Vorlagen dienen der allgemeinen Trainingsplanung; passe sie an deine Erfahrung und deine Möglichkeiten an.":
+    "Version 0.6 · German and English. Versioned data format. Templates are for general training planning; adapt them to your experience and capabilities.",
   "Die Ansicht konnte nicht geladen werden. Bereits gespeicherte Daten bleiben erhalten.":
     "This view could not be loaded. Previously saved data is kept.",
   "Erneut öffnen": "Open again",
@@ -116,8 +116,8 @@ export const english: Record<string, string> = {
     "iPhone: Open this stable app address in Safari → Share → Add to Home Screen → Open as Web App. Android: Browser menu → Install app / Add to Home Screen. Labels may vary.",
   "Training, Speichern, Fehler oder Editor aktiv: erst abschließen. Kein erzwungener Neustart.":
     "Training, saving, an error or editor is active: resolve it first. No forced restart.",
-  "Updates werden absichtlich erst aktiviert, wenn alle bisherigen App-Fenster geschlossen sind. Das schützt auch andere Tabs. Kein automatischer Neustart und kein Geräte-Sync.":
-    "Updates activate only after all existing app windows are closed. This also protects other tabs. No automatic restart or device sync.",
+  "Updates werden absichtlich erst aktiviert, wenn alle bisherigen App-Fenster geschlossen sind. Das schützt auch andere Tabs. Kein automatischer Neustart während des Trainings.":
+    "Updates activate only after all existing app windows are closed. This also protects other tabs. No automatic restart during training.",
   "Trainingsdaten liegen unverschlüsselt im lokalen Browserprofil. In Einstellungen & Daten ein JSON-Backup exportieren. Daten können bei Browserbereinigung oder Speichermangel verloren gehen.":
     "Training data is stored unencrypted in your local browser profile. Export a JSON backup in Settings & data. Browser cleanup or storage pressure may cause data loss.",
   "Bei Displaysperre und App-Wechsel sind Ton und Hintergrundausführung nicht garantiert. Wiederhergestellte Zeitfenster bestätigen keine ausgeführten Übungen.":
@@ -337,8 +337,8 @@ export const english: Record<string, string> = {
   "Anspruchsvollere Variante": "Harder variation",
   "Tags (durch Komma getrennt)": "Tags (comma-separated)",
   "Übung speichern": "Save exercise",
-  "App installieren, Updates & Hilfe · Version 0.5":
-    "Install app, updates & help · version 0.5",
+  "App installieren, Updates & Hilfe · Version 0.6":
+    "Install app, updates & help · version 0.6",
   "App installieren": "Install app",
   "Nach Updates suchen": "Check for updates",
   "Dauerhafte Speicherung anfragen": "Request persistent storage",
@@ -528,4 +528,10 @@ export const english: Record<string, string> = {
   "Übung nach oben": "Move exercise up",
   "Übung nach unten": "Move exercise down",
   "Übung entfernen": "Remove exercise",
+  "Speichern fehlgeschlagen. Der Entwurf bleibt erhalten.":
+    "Save failed. Your draft is preserved.",
+  "Speichern fehlgeschlagen. Bestehendes Backup und Entwurf bleiben erhalten.":
+    "Save failed. Your backup and draft are preserved.",
+  "Mein neues Workout": "My new workout",
+  "Meine Woche": "My week",
 };

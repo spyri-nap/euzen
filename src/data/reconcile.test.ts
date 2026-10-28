@@ -91,3 +91,67 @@ it("applies a server deletion to the selected independent entity", () => {
     }).weeklyPlans,
   ).toEqual([]);
 });
+
+it("remaps complete guest references and preserves historical snapshots after removing the live library", async () => {
+  const { initialState } = await import("../domain/seed");
+  const { newSession, finish } = await import("../domain/timer");
+  const { validateState } = await import("../domain/model");
+  const guest = initialState();
+  const history = finish(
+    newSession(guest.templates[0], guest.exercises, null),
+    false,
+    Date.now() + 1000,
+  );
+  guest.sessions = [history];
+  const imported = mergeGuest(emptyState(), guest);
+  expect(imported.templates[0].id).not.toBe(guest.templates[0].id);
+  expect(imported.sessions[0].snapshot.id).toBe(imported.templates[0].id);
+  expect(
+    validateState({ ...imported, exercises: [], templates: [], scheduled: [] })
+      .sessions[0].exercises,
+  ).toEqual(imported.sessions[0].exercises);
+  expect(guest.sessions[0].snapshot.id).toBe(history.snapshot.id);
+});
+it("rejects incompatible same-day check-ins and two active sessions without mutating the source", async () => {
+  const guest = {
+    ...emptyState(),
+    checkins: [{ date: "2026-10-28", energy: 3, recovery: 3 }],
+  };
+  const target = {
+    ...emptyState(),
+    checkins: [{ date: "2026-10-28", energy: 5, recovery: 5 }],
+  };
+  const original = structuredClone(guest);
+  expect(() => mergeGuest(target, guest)).toThrow("Check-in date conflict");
+  expect(guest).toEqual(original);
+  const { initialState } = await import("../domain/seed");
+  const { newSession } = await import("../domain/timer");
+  const state = initialState();
+  const active = {
+    ...state,
+    sessions: [newSession(state.templates[0], state.exercises, null)],
+  };
+  expect(() => mergeGuest(active, active)).toThrow("Mehrere aktive Sessions");
+});
+
+it("archives both conflict versions atomically before a destructive selection", async () => {
+  const owner = "85000000-0000-4000-8000-000000000001";
+  await saveAccount(owner, 1, emptyState(), []);
+  const first = await stageAccount(owner, 1, {
+    ...emptyState(),
+    weeklyPlans: [week],
+  });
+  await resolveAccount(
+    {
+      operation: first.outbox[0],
+      server: { ...week, name: "Server archive" },
+      revision: 2,
+    },
+    "server",
+  );
+  const archived = await (await import("./accountStore")).latestRecovery(owner);
+  expect(archived?.weeklyPlans[0].name).toBe("Own");
+  expect(
+    (archived?.recoveryConflict as { server: { name: string } }).server.name,
+  ).toBe("Server archive");
+});

@@ -30,9 +30,12 @@ const partition = z.object({
   revisions: z.record(z.string(), z.number().int().nonnegative()).default({}),
 });
 const connection = () =>
-  openDB("euzen-accounts", 1, {
+  openDB("euzen-accounts", 2, {
     upgrade(db) {
-      db.createObjectStore("partitions");
+      if (!db.objectStoreNames.contains("partitions"))
+        db.createObjectStore("partitions");
+      if (!db.objectStoreNames.contains("recovery"))
+        db.createObjectStore("recovery");
     },
   });
 /** Separate API, not yet wired into auth/UI. State and outbox commit atomically. */
@@ -217,9 +220,11 @@ export async function resolveAccount(
   const { operation } = conflict;
   const db = await connection();
   try {
-    const tx = db.transaction("partitions", "readwrite");
+    const tx = db.transaction(["partitions", "recovery"], "readwrite");
     try {
-      const current = partition.parse(await tx.store.get(operation.owner));
+      const current = partition.parse(
+        await tx.objectStore("partitions").get(operation.owner),
+      );
       if (
         current.owner !== operation.owner ||
         current.generation !== operation.generation
@@ -254,7 +259,21 @@ export async function resolveAccount(
         outbox: remaining,
         revisions: { ...current.revisions, [key]: conflict.revision },
       });
-      await tx.store.put(result, operation.owner);
+      await tx.objectStore("recovery").put(
+        {
+          ...current,
+          archivedAt: Date.now(),
+          conflict: {
+            kind: operation.kind,
+            entityId: operation.entityId,
+            serverRevision: conflict.revision,
+            server: conflict.server,
+            local: latest.payload,
+          },
+        },
+        `${current.owner}:conflict:${crypto.randomUUID()}`,
+      );
+      await tx.objectStore("partitions").put(result, operation.owner);
       await tx.done;
       return result;
     } catch (e) {
@@ -264,6 +283,65 @@ export async function resolveAccount(
       await tx.done.catch(() => {});
       throw e;
     }
+  } finally {
+    db.close();
+  }
+}
+
+/** Explicit recovery: archive the entire old generation and its outbox atomically. */
+export async function acceptGeneration(fresh: {
+  owner: string;
+  generation: number;
+  state: AppState;
+  revisions: Record<string, number>;
+}) {
+  const checked = partition.parse({ ...fresh, outbox: [] });
+  validateState(checked.state);
+  const db = await connection();
+  try {
+    const tx = db.transaction(["partitions", "recovery"], "readwrite");
+    try {
+      const old = partition.parse(
+        await tx.objectStore("partitions").get(fresh.owner),
+      );
+      if (old.owner !== fresh.owner || old.generation >= fresh.generation)
+        throw Error("Generation has not advanced");
+      await tx
+        .objectStore("recovery")
+        .put(
+          { ...old, archivedAt: Date.now() },
+          `${old.owner}:${old.generation}:${crypto.randomUUID()}`,
+        );
+      await tx.objectStore("partitions").put(checked, fresh.owner);
+      await tx.done;
+      return checked;
+    } catch (e) {
+      try {
+        tx.abort();
+      } catch {}
+      await tx.done.catch(() => {});
+      throw e;
+    }
+  } finally {
+    db.close();
+  }
+}
+export async function latestRecovery(owner: string) {
+  account.parse(owner);
+  const db = await connection();
+  try {
+    const entries = await db.getAll("recovery");
+    const own = entries
+      .filter((e) => e.owner === owner)
+      .sort(
+        (a, b) => b.generation - a.generation || b.archivedAt - a.archivedAt,
+      );
+    return own[0]
+      ? {
+          ...partition.parse(own[0]).state,
+          ...(own[0].conflict ? { recoveryConflict: own[0].conflict } : {}),
+        }
+      : null;
   } finally {
     db.close();
   }

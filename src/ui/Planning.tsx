@@ -1,3 +1,4 @@
+import { withEditBasis } from "../data/editBasis";
 import { t as tr } from "../i18n";
 import { useState } from "react";
 import {
@@ -96,14 +97,17 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
                 weeklyPlans: plan
                   ? s.weeklyPlans.map((p) =>
                       p.id === plan.id
-                        ? { ...p, name: e.target.value || "Meine Woche" }
+                        ? withEditBasis(plan, {
+                            ...p,
+                            name: e.target.value || tr("Meine Woche"),
+                          })
                         : p,
                     )
                   : [
                       ...s.weeklyPlans,
                       {
                         id: uid(),
-                        name: e.target.value || "Meine Woche",
+                        name: e.target.value || tr("Meine Woche"),
                         startDate: week,
                       },
                     ],
@@ -189,7 +193,10 @@ export function Planning({ state, update, onEdit, onStart }: Props) {
                                 ...s,
                                 scheduled: s.scheduled.map((x) =>
                                   x.id === p.id
-                                    ? { ...x, date: e.target.value }
+                                    ? withEditBasis(p, {
+                                        ...x,
+                                        date: e.target.value,
+                                      })
                                     : x,
                                 ),
                               }));

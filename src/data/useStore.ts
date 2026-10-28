@@ -1,8 +1,11 @@
+import { localSignOutInProgress } from "./auth";
+import { getLanguage } from "../i18n";
+import { syncMessages } from "../locales/sync";
 import { registerEditBases, editExpectations } from "./editBasis";
 import { hasOpenEditor, onEditorsClosed } from "./editGuard";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { validateState, type AppState } from "../domain/model";
-import { loadState, saveState } from "./storage";
+import { loadState, saveState, exportState } from "./storage";
 import { client, accountSyncEnabled } from "./client";
 import {
   loadAccount,
@@ -10,16 +13,24 @@ import {
   stageAccount,
   acknowledgeAccount,
   resolveAccount,
+  acceptGeneration,
+  latestRecovery,
 } from "./accountStore";
 import { cloudTransport } from "./cloud";
 import { drain, type SyncConflict } from "./sync";
 import { classifySyncFailure } from "./syncFailure";
 import { mergeGuest } from "./reconcile";
 
+// Only an export can survive a reload when the browser refuses every local write.
+// Keep failed writes isolated by owner while the current document remains open.
+const volatileWrites = new Map<
+  string,
+  { generation: number; state: AppState; expected: Record<string, number> }
+>();
 // One lease per browser document, shared across React StrictMode remounts.
 let writerPermission: Promise<boolean> | undefined;
 function acquireWriter(): Promise<boolean> {
-  if (!navigator.locks) return Promise.resolve(true);
+  if (!navigator.locks) return Promise.resolve(false);
   writerPermission ??= new Promise<boolean>((resolve) => {
     void navigator.locks
       .request("euzen-editor", { ifAvailable: true }, async (lock) => {
@@ -48,6 +59,8 @@ export function useStore() {
   const epoch = useRef(0);
   const generation = useRef(0);
   const dirty = useRef(false);
+  const authRequired = useRef(false);
+  const operationGate = useRef(false);
   const writeSequence = useRef(0);
   const writes = useRef(Promise.resolve());
   const control = useRef(new AbortController());
@@ -57,6 +70,7 @@ export function useStore() {
     let last: string | null | undefined;
     let busy = false;
     let writable = false;
+    let authenticated = !accountSyncEnabled;
     let halted = false;
     let requested = false;
     let attempts = 0;
@@ -67,7 +81,8 @@ export function useStore() {
     async function sync() {
       const id = owner.current,
         version = epoch.current;
-      if (!id || !writable || !navigator.onLine || halted) return;
+      if (!id || !writable || !navigator.onLine || halted || !authenticated)
+        return;
       if (busy) {
         requested = true;
         return;
@@ -81,6 +96,12 @@ export function useStore() {
         if (!alive || version !== epoch.current) return;
         const transport = cloudTransport(client!, id);
         const signal = control.current.signal;
+        // A reset must be detected before trying to replay the old outbox.
+        if (local?.outbox.length) {
+          const remote = await transport.pull(signal);
+          if (remote.generation !== local.generation)
+            throw { code: "P0001", message: "Stale generation" };
+        }
         if (local) {
           const conflict = await drain(
             local.outbox,
@@ -93,9 +114,7 @@ export function useStore() {
               halted = true;
               setConflict(conflict);
               status("conflict");
-              setError(
-                "Synchronisierungskonflikt / Sync conflict. Lokale Daten bleiben erhalten. / Local data preserved.",
-              );
+              setError("sync_1");
             }
             return;
           }
@@ -162,9 +181,7 @@ export function useStore() {
                 (0.8 + Math.random() * 0.4),
             );
           }
-          setError(
-            "Cloud-Abgleich fehlgeschlagen. Lokale Daten bleiben erhalten. / Cloud sync failed. Local data preserved.",
-          );
+          setError("sync_2");
         }
       } finally {
         busy = false;
@@ -191,6 +208,9 @@ export function useStore() {
       owner.current = id;
       current.current = null;
       dirty.current = false;
+      operationGate.current = false;
+      generation.current = 0;
+      setSaving(false);
       setState(null);
       setError("");
       setConflict(null);
@@ -205,16 +225,27 @@ export function useStore() {
         writable = permission;
         setReadonly(!permission);
         if (!id) {
-          const guest = await loadState();
+          const guest =
+            volatileWrites.get("guest")?.state ?? (await loadState());
+          if (volatileWrites.has("guest")) {
+            dirty.current = true;
+            setError("sync_6");
+          }
           if (alive && version === epoch.current) {
             current.current = guest;
             setState(guest);
-            status("guest");
+            status(permission ? "guest" : "readonly");
           }
           return;
         }
         const local = await loadAccount(id);
         if (!alive || version !== epoch.current) return;
+        const rescue = volatileWrites.get(id);
+        if (local && rescue?.generation === local.generation) {
+          local.state = rescue.state;
+          dirty.current = true;
+          setError("sync_6");
+        }
         if (local) {
           generation.current = local.generation;
           registerEditBases(
@@ -231,32 +262,38 @@ export function useStore() {
           );
         }
         if (!navigator.onLine && !local) {
-          setError(
-            "Dieses Konto ist offline noch nicht verfügbar. Internetverbindung herstellen und erneut versuchen. / This account is not cached. Reconnect and retry.",
-          );
+          setError("sync_3");
           status("offline");
           return;
         }
         if (!permission && !local) {
-          setError(
-            "Bitte den bearbeitenden Tab verwenden oder andere Tabs schließen und neu laden. / Use the editing tab or close other tabs and reload.",
-          );
+          setError("sync_4");
           return;
         }
         await sync();
       } catch {
         if (alive && version === epoch.current) {
-          setError(
-            "Speicher konnte nicht geladen werden. / Storage could not be loaded.",
-          );
+          setError("sync_5");
           status("error");
         }
       }
     }
     const subscription = (
       accountSyncEnabled ? client : null
-    )?.auth.onAuthStateChange((_event, session) => {
+    )?.auth.onAuthStateChange((event, session) => {
       // Invalidate visible data synchronously; avoid Supabase calls inside callback.
+      authenticated = Boolean(session);
+      if (event === "SIGNED_OUT" && !localSignOutInProgress && owner.current) {
+        authRequired.current = true;
+        epoch.current++;
+        control.current.abort();
+        control.current = new AbortController();
+        halted = true;
+        setSyncStatus("auth");
+        setError("authRequired");
+        return;
+      }
+      authRequired.current = false;
       const id = session?.user.id ?? null;
       if (last !== id) {
         epoch.current++;
@@ -265,7 +302,12 @@ export function useStore() {
         setState(null);
       }
       setTimeout(() => {
-        if (alive) void switchOwner(id);
+        if (alive) {
+          if (last === id && session) {
+            halted = false;
+            void sync();
+          } else void switchOwner(id);
+        }
       }, 0);
     });
     if (!client || !accountSyncEnabled) void switchOwner(null);
@@ -279,6 +321,14 @@ export function useStore() {
       if (owner.current) status("offline");
     };
     window.addEventListener("offline", offline);
+    const resumed = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        writable = false;
+        setReadonly(true);
+        setSyncStatus("readonly");
+      }
+    };
+    window.addEventListener("pageshow", resumed);
     const visible = () => {
       if (document.visibilityState === "visible") void sync();
     };
@@ -295,6 +345,7 @@ export function useStore() {
       subscription?.data.subscription.unsubscribe();
       window.removeEventListener("online", online);
       window.removeEventListener("offline", offline);
+      window.removeEventListener("pageshow", resumed);
       document.removeEventListener("visibilitychange", visible);
       clearInterval(timer);
       window.clearTimeout(retryTimer);
@@ -307,11 +358,15 @@ export function useStore() {
       const writeGeneration = generation.current;
       const sequence = ++writeSequence.current;
       let succeeded = true;
+      let effectiveExpected = { ...expected };
       dirty.current = true;
       setSaving(true);
       writes.current = writes.current
         .catch(() => {})
         .then(async () => {
+          const rescue = volatileWrites.get(id ?? "guest");
+          if (rescue?.generation === writeGeneration)
+            effectiveExpected = { ...rescue.expected, ...expected };
           if (id) {
             const local = await loadAccount(id);
             if (!local) throw Error("Account not initialized");
@@ -319,7 +374,7 @@ export function useStore() {
               id,
               writeGeneration,
               next,
-              expected,
+              effectiveExpected,
             );
             registerEditBases(
               next,
@@ -329,18 +384,23 @@ export function useStore() {
               staged.outbox,
             );
           } else await saveState(next);
+          volatileWrites.delete(id ?? "guest");
           if (version === epoch.current) {
             if (sequence === writeSequence.current) dirty.current = false;
             setError("");
-            setSyncStatus(id ? "pending" : "guest");
+            setSyncStatus(
+              id ? (authRequired.current ? "auth" : "pending") : "guest",
+            );
           }
         })
         .catch(() => {
           succeeded = false;
-          if (version === epoch.current)
-            setError(
-              "Speichern fehlgeschlagen / Save failed. Bitte Backup exportieren / Please export a backup.",
-            );
+          volatileWrites.set(id ?? "guest", {
+            generation: writeGeneration,
+            state: structuredClone(next),
+            expected: effectiveExpected,
+          });
+          if (version === epoch.current) setError("sync_6");
         })
         .finally(() => {
           if (version === epoch.current) setSaving(false);
@@ -354,29 +414,94 @@ export function useStore() {
   );
   const update = useCallback(
     (fn: (s: AppState) => AppState) => {
-      if (!current.current || readonly) return;
-      const raw = fn(current.current);
-      const expected = editExpectations(raw, owner.current, generation.current);
-      const next = validateState(raw);
-      current.current = next;
-      setState(next);
-      persist(next, expected);
+      if (!current.current || readonly || operationGate.current)
+        return Promise.resolve(false);
+      try {
+        const raw = fn(current.current);
+        const expected = editExpectations(
+          raw,
+          owner.current,
+          generation.current,
+          current.current,
+        );
+        const next = validateState(raw);
+        current.current = next;
+        setState(next);
+        return persist(next, expected);
+      } catch {
+        setError("sync_10");
+        return Promise.resolve(false);
+      }
     },
     [persist, readonly],
   );
   return {
     state,
     update,
-    error,
+    error: syncMessages[error]?.[getLanguage() === "en" ? 1 : 0] ?? error,
     saving,
     readonly,
     syncStatus,
     accountOwner: owner.current,
+    accountGeneration: generation.current,
     conflict,
+    exportRecovery: async () => {
+      if (owner.current) {
+        const id = owner.current;
+        const archived = await latestRecovery(id);
+        if (id === owner.current && archived) exportState(archived);
+      }
+    },
+    recoverGeneration: async () => {
+      const id = owner.current,
+        version = epoch.current;
+      if (!id || readonly || dirty.current || operationGate.current)
+        return false;
+      operationGate.current = true;
+      setSaving(true);
+      try {
+        await writes.current;
+        const fresh = await cloudTransport(client!, id).pull(
+          control.current.signal,
+        );
+        if (version !== epoch.current) return false;
+        const recovered = await acceptGeneration(fresh);
+        if (version !== epoch.current) return false;
+        generation.current = recovered.generation;
+        registerEditBases(
+          recovered.state,
+          id,
+          recovered.generation,
+          recovered.revisions,
+          [],
+        );
+        current.current = recovered.state;
+        setState(recovered.state);
+        setConflict(null);
+        setError("");
+        setSyncStatus("synced");
+        return true;
+      } catch {
+        if (version === epoch.current) setError("sync_7");
+        return false;
+      } finally {
+        if (version === epoch.current) {
+          operationGate.current = false;
+          setSaving(false);
+        }
+      }
+    },
     resolve: async (choice: "local" | "server") => {
-      if (!conflict || conflict.operation.owner !== owner.current || readonly)
+      if (
+        !conflict ||
+        conflict.operation.owner !== owner.current ||
+        readonly ||
+        operationGate.current
+      )
         return;
       const version = epoch.current;
+      operationGate.current = true;
+      setSaving(true);
       try {
         await writes.current;
         const result = await resolveAccount(conflict, choice);
@@ -394,13 +519,16 @@ export function useStore() {
         setError("");
         void synchronize.current();
       } catch {
-        setError(
-          "Auflösung nicht möglich: abhängige Änderungen prüfen. / Cannot resolve: check dependent changes.",
-        );
+        if (version === epoch.current) setError("sync_8");
+      } finally {
+        if (version === epoch.current) {
+          operationGate.current = false;
+          setSaving(false);
+        }
       }
     },
     importGuest: async () => {
-      if (!owner.current || readonly) return false;
+      if (!owner.current || readonly || operationGate.current) return false;
       const version = epoch.current;
       try {
         const guest = await loadState();
@@ -410,13 +538,15 @@ export function useStore() {
         setState(next);
         return await persist(next);
       } catch {
-        setError(
-          "Übernahme abgebrochen: Check-ins am selben Datum oder aktive Sessions prüfen. Bitte beide Bereiche exportieren. / Import cancelled: review check-ins on the same date or active sessions. Export both areas.",
-        );
+        setError("sync_9");
         return false;
       }
     },
     retry: () => {
+      if (readonly) {
+        location.reload();
+        return;
+      }
       if (dirty.current && current.current) persist(current.current);
       else if (owner.current) void synchronize.current();
       else if (current.current) persist(current.current);

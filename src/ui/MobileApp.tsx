@@ -92,7 +92,7 @@ export function MobileApp({ blocked }: { blocked: boolean }) {
   }, []);
   return (
     <details className="mobile-help panel">
-      <summary>{tr("App installieren, Updates & Hilfe · Version 0.5")}</summary>
+      <summary>{tr("App installieren, Updates & Hilfe · Version 0.6")}</summary>
       <p role="status">
         {online ? tr("Netzwerk laut Gerät verfügbar") : tr("Offline")} ·{" "}
         {tr(status)}
@@ -141,7 +141,7 @@ export function MobileApp({ blocked }: { blocked: boolean }) {
       )}
       <p>
         {tr(
-          "Updates werden absichtlich erst aktiviert, wenn alle bisherigen App-Fenster geschlossen sind. Das schützt auch andere Tabs. Kein automatischer Neustart und kein Geräte-Sync.",
+          "Updates werden absichtlich erst aktiviert, wenn alle bisherigen App-Fenster geschlossen sind. Das schützt auch andere Tabs. Kein automatischer Neustart während des Trainings.",
         )}
       </p>
       <p>
@@ -175,7 +175,7 @@ export function MobileApp({ blocked }: { blocked: boolean }) {
         {tr("Technische Diagnose – zum freiwilligen Kopieren")}
         <textarea
           readOnly
-          value={`Eúzēn 0.5.0\nBuild: ${build}\nService Worker: ${registration ? "registriert" : "nicht registriert"}\nNetzwerk: ${online ? "online" : "offline"}`}
+          value={`Eúzēn 0.6.0\nBuild: ${build}\nService Worker: ${registration ? "registriert" : "nicht registriert"}\nNetzwerk: ${online ? "online" : "offline"}`}
         />
       </label>
     </details>

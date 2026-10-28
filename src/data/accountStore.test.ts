@@ -73,3 +73,37 @@ it("rejects forged acknowledgements and staging after a reset", async () => {
     "Stale generation",
   );
 });
+
+it("archives old-generation edits and outbox before accepting a reset and isolates recovery exports", async () => {
+  const { acceptGeneration, latestRecovery } = await import("./accountStore");
+  const owner = "80000000-0000-4000-8000-000000000002";
+  const own = {
+    ...emptyState(),
+    weeklyPlans: [
+      { id: "recover", name: "Unsent work", startDate: "2026-10-28" },
+    ],
+  };
+  await saveAccount(owner, 1, emptyState(), []);
+  await (await import("./accountStore")).stageAccount(owner, 1, own);
+  const reset = await acceptGeneration({
+    owner,
+    generation: 2,
+    state: emptyState(),
+    revisions: {},
+  });
+  expect(reset.outbox).toEqual([]);
+  expect(reset.generation).toBe(2);
+  expect(await latestRecovery(owner)).toEqual(own);
+  expect(
+    await latestRecovery("80000000-0000-4000-8000-000000000003"),
+  ).toBeNull();
+  await expect(
+    acceptGeneration({
+      owner,
+      generation: 2,
+      state: emptyState(),
+      revisions: {},
+    }),
+  ).rejects.toThrow();
+  expect(await latestRecovery(owner)).toEqual(own);
+});

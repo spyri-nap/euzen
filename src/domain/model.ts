@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getLocale } from "../i18n";
+import { getLocale, getLanguage } from "../i18n";
 
 export const dimensions = [
   "Kraft",
@@ -290,7 +290,7 @@ export function prescription(exerciseId: string): Prescription {
 export function block(exerciseId: string): WorkoutBlock {
   return {
     id: uid(),
-    name: "Trainingsblock",
+    name: getLanguage() === "en" ? "Training block" : "Trainingsblock",
     section: "Hauptteil",
     mode: "sets",
     rounds: 3,

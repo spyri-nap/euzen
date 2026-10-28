@@ -1,7 +1,7 @@
-# Eúzēn 0.6 · aktueller Entwicklungsstand
+# Eúzēn 0.6 · aktueller Einstieg
 
-Verbindlicher technischer Stand, Prüfbelege und verbleibende Einschränkungen: [SYNC-ARCHITECTURE.md](SYNC-ARCHITECTURE.md).
+Die lokale Web-Testversion 0.6 ist implementiert und abgenommen. Verbindlich sind [ACCEPTANCE-0.6.md](ACCEPTANCE-0.6.md), [SYNC-ARCHITECTURE.md](SYNC-ARCHITECTURE.md) und die Startanleitung in der README. Physische Gerätetests sind getrennt unter DEVICE-TESTS.md beschrieben. Historische Zwischenstände unter history/ ersetzen diesen Status nicht.
 
-OTP-Login bestätigt. Trainings-Sync-Migration im freigegebenen Testprojekt angewendet. Transport, experimentelle Store-Anbindung, Konfliktoberfläche und Gastübernahme vorhanden. Kontosync standardmäßig deaktiviert; keine integrierte Browser-/Gerätefreigabe. Kein Merge und keine Produktionsveröffentlichung.
+Node >=22.12; Branch feat/euzen-foundation; vorhandenes Supabase-Testprojekt yvxzcawjtyqcljuoyfeg. Arc ist der Standardbrowser. OTP-SMTP und Vorlagen sind eingerichtet. Keine Secrets ausgeben. Keine Nutzerdaten löschen und keine automatischen Cloud-Resets durchführen.
 
-Historische Zwischenstände liegen unter history/. Standardbrowser: Arc. Node >=22.12. Branch feat/euzen-foundation weiterverwenden. Lokale Nutzerdaten nicht löschen.
+Lokaler Test: npm run build:test und npm run preview:test; bestehende Server weiterverwenden. Kein Merge, Push oder Produktionsdeployment wurde ausgelöst.
