@@ -1,3 +1,4 @@
+import { SyncPanel, syncLabel } from "./ui/SyncPanel";
 import { t as tr } from "./i18n";
 import { setLanguage, useLanguage } from "./i18n";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
@@ -59,7 +60,8 @@ const nav = [
 
 export function App() {
   useLanguage();
-  const { state, update, error, saving, readonly, retry } = useStore();
+  const store = useStore();
+  const { state, update, error, saving, readonly, retry, syncStatus } = store;
   useEffect(() => {
     if (state) setLanguage(state.preferences.language);
   }, [state?.preferences.language]);
@@ -175,7 +177,7 @@ export function App() {
               ? tr("Speicher prüfen")
               : saving
                 ? tr("Wird gespeichert …")
-                : tr("Lokal auf deinem Gerät")}
+                : syncLabel(syncStatus, saving)}
           </span>
         </div>
       </aside>
@@ -351,6 +353,18 @@ export function App() {
         <Settings
           state={state}
           update={update}
+          syncPanel={
+            <SyncPanel
+              key={store.accountOwner ?? "guest"}
+              owner={store.accountOwner}
+              status={syncStatus}
+              saving={saving}
+              readonly={readonly}
+              conflict={store.conflict}
+              resolve={store.resolve}
+              importGuest={store.importGuest}
+            />
+          }
           onClose={() => setSettings(false)}
         />
       )}
@@ -767,10 +781,12 @@ function Checkin({
   );
 }
 function Settings({
+  syncPanel,
   state,
   update,
   onClose,
 }: {
+  syncPanel?: import("react").ReactNode;
   state: AppState;
   update: (fn: (s: AppState) => AppState) => void;
   onClose: () => void;
@@ -786,6 +802,7 @@ function Settings({
         }
       >
         <Account />
+        {syncPanel}
       </Suspense>
       <Field label={tr("Sprache der Oberfläche")}>
         <select

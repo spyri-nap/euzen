@@ -1,27 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import {
-  AccountError,
-  AccountService,
-  accountClient,
-  type Profile,
-} from "../data/auth";
+import { AccountError, AccountService, type Profile } from "../data/auth";
 import { getLanguage, useLanguage } from "../i18n";
 import { Field } from "./common";
 
-const env = (
-  import.meta as ImportMeta & { env: Record<string, string | undefined> }
-).env;
-const client = accountClient(
-  env.VITE_SUPABASE_URL,
-  env.VITE_SUPABASE_PUBLISHABLE_KEY,
-);
+import { client, accountSyncEnabled } from "../data/client";
 const service = client ? new AccountService(client) : null;
 const copy = {
   title: ["Dein Testkonto", "Your test account"],
   boundary: [
-    "Nur das Profil liegt im Konto. Dein Training bleibt separat auf diesem Gerät; noch kein Cloud-Sync und keine automatische Datenübernahme.",
-    "Only your profile belongs to this account. Training stays separately on this device; no cloud sync or automatic data adoption yet.",
+    "Trainingsdaten werden im angemeldeten Konto synchronisiert. Gastdaten bleiben separat; keine automatische Datenübernahme.",
+    "Training syncs in your signed-in account. Guest data stays separate; no automatic data adoption.",
   ],
   config: [
     "Die Testanmeldung ist noch nicht konfiguriert.",
@@ -74,8 +63,8 @@ const copy = {
   saved: ["Profil im Konto gespeichert.", "Profile saved to your account."],
   logout: ["Auf diesem Gerät abmelden", "Sign out on this device"],
   private: [
-    "Deine E-Mail wird für Anmeldung und Kontoverwaltung an Supabase übermittelt. Keine Trainingsdaten werden hier hochgeladen.",
-    "Your email is sent to Supabase for sign-in and account management. No training data is uploaded here.",
+    "Deine E-Mail wird für Anmeldung und Kontoverwaltung an Supabase übermittelt. Trainingsdaten werden nur bei freigegebenem Kontosync übertragen.",
+    "Your email is sent to Supabase for sign-in and account management. Training data is uploaded only when account sync is enabled.",
   ],
 } as const;
 type Key = keyof typeof copy;
@@ -152,7 +141,13 @@ export function Account() {
   return (
     <section aria-label={text("title")}>
       <h3>{text("title")}</h3>
-      <p className="hint">{text("boundary")}</p>
+      <p className="hint">
+        {accountSyncEnabled
+          ? text("boundary")
+          : getLanguage() === "en"
+            ? "Training stays on this device; no cloud sync or automatic data adoption."
+            : "Training bleibt auf diesem Gerät; kein Cloud-Sync und keine automatische Datenübernahme."}
+      </p>
       {!service ? (
         <p role="status">{text("config")}</p>
       ) : !ready ? (

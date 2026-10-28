@@ -1,8 +1,9 @@
 import { openDB } from "idb";
+import { changes, entityKey } from "./sync";
 import { z } from "zod";
 import { stateSchema, validateState, type AppState } from "../domain/model";
 const account = z.uuid();
-const operation = z.object({
+export const operationSchema = z.object({
   id: z.uuid(),
   owner: z.uuid(),
   generation: z.number().int().positive(),
@@ -20,12 +21,13 @@ const operation = z.object({
   payload: z.record(z.string(), z.unknown()).nullable(),
   remove: z.boolean(),
 });
-export type PendingOperation = z.infer<typeof operation>;
+export type PendingOperation = z.infer<typeof operationSchema>;
 const partition = z.object({
   owner: z.uuid(),
   generation: z.number().int().positive(),
   state: stateSchema,
-  outbox: z.array(operation),
+  outbox: z.array(operationSchema),
+  revisions: z.record(z.string(), z.number().int().nonnegative()).default({}),
 });
 const connection = () =>
   openDB("euzen-accounts", 1, {
@@ -39,10 +41,17 @@ export async function saveAccount(
   generation: number,
   state: AppState,
   outbox: PendingOperation[],
+  revisions: Record<string, number> = {},
 ) {
   account.parse(owner);
   validateState(state);
-  const checked = partition.parse({ owner, generation, state, outbox });
+  const checked = partition.parse({
+    owner,
+    generation,
+    state,
+    outbox,
+    revisions,
+  });
   if (
     checked.outbox.some(
       (op) => op.owner !== owner || op.generation !== generation,
@@ -83,6 +92,173 @@ export async function loadAccount(owner: string) {
     )
       throw Error("Partition mismatch");
     return checked;
+  } finally {
+    db.close();
+  }
+}
+
+/** Read/modify/write in ONE transaction: uploads cannot erase concurrent local edits. */
+export async function stageAccount(
+  owner: string,
+  generation: number,
+  next: AppState,
+) {
+  account.parse(owner);
+  const checked = validateState(next);
+  const db = await connection();
+  try {
+    const tx = db.transaction("partitions", "readwrite");
+    try {
+      const raw = await tx.store.get(owner);
+      if (!raw) throw Error("Account not initialized");
+      const previous = partition.parse(raw);
+      if (previous.owner !== owner || previous.generation !== generation)
+        throw Error("Stale generation");
+      const added = changes(
+        owner,
+        generation,
+        previous.state,
+        checked,
+        previous.revisions,
+        previous.outbox,
+      );
+      const result = partition.parse({
+        ...previous,
+        state: checked,
+        outbox: [...previous.outbox, ...added],
+      });
+      await tx.store.put(result, owner);
+      await tx.done;
+      return result;
+    } catch (error) {
+      try {
+        tx.abort();
+      } catch {
+        /* transaction already completed */
+      }
+      await tx.done.catch(() => {});
+      throw error;
+    }
+  } finally {
+    db.close();
+  }
+}
+export async function acknowledgeAccount(
+  operation: PendingOperation,
+  revision: number,
+) {
+  operationSchema.parse(operation);
+  if (
+    !Number.isSafeInteger(revision) ||
+    revision !== operation.expectedRevision + 1
+  )
+    throw Error("Invalid acknowledgement");
+  const db = await connection();
+  try {
+    const tx = db.transaction("partitions", "readwrite");
+    try {
+      const current = partition.parse(await tx.store.get(operation.owner));
+      if (
+        current.owner !== operation.owner ||
+        current.generation !== operation.generation
+      )
+        throw Error("Stale generation");
+      const queued = current.outbox.find((op) => op.id === operation.id);
+      if (!queued) {
+        await tx.done;
+        return;
+      }
+      if (JSON.stringify(queued) !== JSON.stringify(operation))
+        throw Error("Operation mismatch");
+      const key = entityKey(operation.kind, operation.entityId);
+      if (
+        current.outbox.some(
+          (op) =>
+            op.id !== operation.id &&
+            entityKey(op.kind, op.entityId) === key &&
+            op.expectedRevision < operation.expectedRevision,
+        )
+      )
+        throw Error("Out of order acknowledgement");
+      await tx.store.put(
+        {
+          ...current,
+          revisions: { ...current.revisions, [key]: revision },
+          outbox: current.outbox.filter((op) => op.id !== operation.id),
+        },
+        operation.owner,
+      );
+      await tx.done;
+    } catch (error) {
+      try {
+        tx.abort();
+      } catch {
+        /* transaction already completed */
+      }
+      await tx.done.catch(() => {});
+      throw error;
+    }
+  } finally {
+    db.close();
+  }
+}
+
+/** Resolve only the conflicted entity; retain every unrelated local operation. */
+export async function resolveAccount(
+  conflict: import("./sync").SyncConflict,
+  choice: "local" | "server",
+) {
+  const { acceptServer } = await import("./reconcile");
+  const { operation } = conflict;
+  const db = await connection();
+  try {
+    const tx = db.transaction("partitions", "readwrite");
+    try {
+      const current = partition.parse(await tx.store.get(operation.owner));
+      if (
+        current.owner !== operation.owner ||
+        current.generation !== operation.generation
+      )
+        throw Error("Stale generation");
+      const first = current.outbox.find(
+        (op) =>
+          op.kind === operation.kind && op.entityId === operation.entityId,
+      );
+      if (first?.id !== operation.id) throw Error("Conflict no longer current");
+      const key = entityKey(operation.kind, operation.entityId);
+      const matching = current.outbox.filter(
+        (op) => entityKey(op.kind, op.entityId) === key,
+      );
+      const remaining = current.outbox.filter(
+        (op) => entityKey(op.kind, op.entityId) !== key,
+      );
+      const latest = matching.at(-1)!;
+      const state =
+        choice === "server"
+          ? acceptServer(current.state, conflict)
+          : current.state;
+      if (choice === "local")
+        remaining.push({
+          ...latest,
+          id: crypto.randomUUID(),
+          expectedRevision: conflict.revision,
+        });
+      const result = partition.parse({
+        ...current,
+        state,
+        outbox: remaining,
+        revisions: { ...current.revisions, [key]: conflict.revision },
+      });
+      await tx.store.put(result, operation.owner);
+      await tx.done;
+      return result;
+    } catch (e) {
+      try {
+        tx.abort();
+      } catch {}
+      await tx.done.catch(() => {});
+      throw e;
+    }
   } finally {
     db.close();
   }

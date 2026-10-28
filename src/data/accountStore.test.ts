@@ -34,3 +34,42 @@ it("blocks old generation writes after a confirmed generation transition", async
   );
   expect((await loadAccount(a))?.generation).toBe(2);
 });
+
+it("atomically appends edits and preserves them during upload acknowledgement", async () => {
+  const { stageAccount, acknowledgeAccount } = await import("./accountStore");
+  const owner = "10000000-0000-4000-8000-000000000003";
+  await saveAccount(owner, 1, emptyState(), []);
+  const first = await stageAccount(owner, 1, {
+    ...emptyState(),
+    preferences: { ...emptyState().preferences, audio: true },
+  });
+  const operation = first.outbox[0];
+  await stageAccount(owner, 1, emptyState());
+  await acknowledgeAccount(operation, 1);
+  const current = await loadAccount(owner);
+  expect(current?.state.preferences.audio).toBe(false);
+  expect(current?.outbox).toHaveLength(1);
+  expect(current?.outbox[0].expectedRevision).toBe(1);
+  await acknowledgeAccount(operation, 1); // idempotent local receipt
+  expect((await loadAccount(owner))?.outbox).toHaveLength(1);
+});
+it("rejects forged acknowledgements and staging after a reset", async () => {
+  const { stageAccount, acknowledgeAccount } = await import("./accountStore");
+  const owner = "10000000-0000-4000-8000-000000000004";
+  await saveAccount(owner, 1, emptyState(), []);
+  const first = await stageAccount(owner, 1, {
+    ...emptyState(),
+    preferences: { ...emptyState().preferences, audio: true },
+  });
+  await expect(
+    acknowledgeAccount({ ...first.outbox[0], entityId: "forged" }, 1),
+  ).rejects.toThrow("Operation mismatch");
+  expect((await loadAccount(owner))?.outbox).toHaveLength(1);
+  await saveAccount(owner, 2, emptyState(), []);
+  await expect(stageAccount(owner, 1, emptyState())).rejects.toThrow(
+    "Stale generation",
+  );
+  await expect(acknowledgeAccount(first.outbox[0], 1)).rejects.toThrow(
+    "Stale generation",
+  );
+});
