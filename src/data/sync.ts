@@ -10,7 +10,8 @@ export type RevisionMap = Record<string, number>;
 export const entityKey = (kind: string, id: string) =>
   JSON.stringify([kind, id]);
 export function entities(state: AppState): Entity[] {
-  const s = validateState(state);
+  validateState(state);
+  const s = state;
   return [
     ...s.exercises.map((payload) => ({
       kind: "exercise" as const,

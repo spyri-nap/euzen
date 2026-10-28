@@ -102,6 +102,7 @@ export async function stageAccount(
   owner: string,
   generation: number,
   next: AppState,
+  expected: Record<string, number> = {},
 ) {
   account.parse(owner);
   const checked = validateState(next);
@@ -122,6 +123,10 @@ export async function stageAccount(
         previous.revisions,
         previous.outbox,
       );
+      for (const op of added) {
+        const key = entityKey(op.kind, op.entityId);
+        if (expected[key] !== undefined) op.expectedRevision = expected[key];
+      }
       const result = partition.parse({
         ...previous,
         state: checked,

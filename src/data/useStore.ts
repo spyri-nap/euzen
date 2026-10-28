@@ -1,3 +1,4 @@
+import { registerEditBases, editExpectations } from "./editBasis";
 import { hasOpenEditor, onEditorsClosed } from "./editGuard";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { validateState, type AppState } from "../domain/model";
@@ -132,6 +133,13 @@ export function useStore() {
             !dirty.current
           ) {
             generation.current = fresh.generation;
+            registerEditBases(
+              fresh.state,
+              id,
+              fresh.generation,
+              fresh.revisions,
+              [],
+            );
             current.current = fresh.state;
             setState(fresh.state);
             status("synced");
@@ -209,6 +217,13 @@ export function useStore() {
         if (!alive || version !== epoch.current) return;
         if (local) {
           generation.current = local.generation;
+          registerEditBases(
+            local.state,
+            id,
+            local.generation,
+            local.revisions,
+            local.outbox,
+          );
           current.current = local.state;
           setState(local.state);
           status(
@@ -285,50 +300,67 @@ export function useStore() {
       window.clearTimeout(retryTimer);
     };
   }, []);
-  const persist = useCallback((next: AppState) => {
-    const id = owner.current,
-      version = epoch.current;
-    const writeGeneration = generation.current;
-    const sequence = ++writeSequence.current;
-    let succeeded = true;
-    dirty.current = true;
-    setSaving(true);
-    writes.current = writes.current
-      .catch(() => {})
-      .then(async () => {
-        if (id) {
-          const local = await loadAccount(id);
-          if (!local) throw Error("Account not initialized");
-          await stageAccount(id, writeGeneration, next);
-        } else await saveState(next);
-        if (version === epoch.current) {
-          if (sequence === writeSequence.current) dirty.current = false;
-          setError("");
-          setSyncStatus(id ? "pending" : "guest");
-        }
-      })
-      .catch(() => {
-        succeeded = false;
-        if (version === epoch.current)
-          setError(
-            "Speichern fehlgeschlagen / Save failed. Bitte Backup exportieren / Please export a backup.",
-          );
-      })
-      .finally(() => {
-        if (version === epoch.current) setSaving(false);
+  const persist = useCallback(
+    (next: AppState, expected: Record<string, number> = {}) => {
+      const id = owner.current,
+        version = epoch.current;
+      const writeGeneration = generation.current;
+      const sequence = ++writeSequence.current;
+      let succeeded = true;
+      dirty.current = true;
+      setSaving(true);
+      writes.current = writes.current
+        .catch(() => {})
+        .then(async () => {
+          if (id) {
+            const local = await loadAccount(id);
+            if (!local) throw Error("Account not initialized");
+            const staged = await stageAccount(
+              id,
+              writeGeneration,
+              next,
+              expected,
+            );
+            registerEditBases(
+              next,
+              id,
+              writeGeneration,
+              staged.revisions,
+              staged.outbox,
+            );
+          } else await saveState(next);
+          if (version === epoch.current) {
+            if (sequence === writeSequence.current) dirty.current = false;
+            setError("");
+            setSyncStatus(id ? "pending" : "guest");
+          }
+        })
+        .catch(() => {
+          succeeded = false;
+          if (version === epoch.current)
+            setError(
+              "Speichern fehlgeschlagen / Save failed. Bitte Backup exportieren / Please export a backup.",
+            );
+        })
+        .finally(() => {
+          if (version === epoch.current) setSaving(false);
+        });
+      void writes.current.then(() => {
+        if (version === epoch.current) void synchronize.current();
       });
-    void writes.current.then(() => {
-      if (version === epoch.current) void synchronize.current();
-    });
-    return writes.current.then(() => succeeded && version === epoch.current);
-  }, []);
+      return writes.current.then(() => succeeded && version === epoch.current);
+    },
+    [],
+  );
   const update = useCallback(
     (fn: (s: AppState) => AppState) => {
       if (!current.current || readonly) return;
-      const next = validateState(fn(current.current));
+      const raw = fn(current.current);
+      const expected = editExpectations(raw, owner.current, generation.current);
+      const next = validateState(raw);
       current.current = next;
       setState(next);
-      persist(next);
+      persist(next, expected);
     },
     [persist, readonly],
   );
@@ -349,6 +381,13 @@ export function useStore() {
         await writes.current;
         const result = await resolveAccount(conflict, choice);
         if (version !== epoch.current) return;
+        registerEditBases(
+          result.state,
+          conflict.operation.owner,
+          result.generation,
+          result.revisions,
+          result.outbox,
+        );
         current.current = result.state;
         setState(result.state);
         setConflict(null);

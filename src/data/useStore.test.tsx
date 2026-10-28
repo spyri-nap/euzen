@@ -235,3 +235,45 @@ it("preserves the editing base while a dialog is open and resumes pull after clo
   await settle();
   expect(store.state?.weeklyPlans[0].name).toBe("Remote revision");
 });
+
+it("regression: a stale form keeps its opening revision even after a newer snapshot was pulled", async () => {
+  const { withEditBasis } = await import("./editBasis");
+  const key = JSON.stringify(["week", "stale-form"]);
+  const initial = { id: "stale-form", name: "Base", startDate: "2026-10-28" };
+  harness.pull.mockResolvedValue({
+    owner,
+    generation: 1,
+    state: { ...emptyState(), weeklyPlans: [initial] },
+    revisions: { [key]: 1 },
+  });
+  await signIn(owner);
+  const opening = store.state!.weeklyPlans[0];
+  const remote = { ...initial, name: "Client B" };
+  harness.pull.mockResolvedValue({
+    owner,
+    generation: 1,
+    state: { ...emptyState(), weeklyPlans: [remote] },
+    revisions: { [key]: 2 },
+  });
+  await act(async () => store.retry());
+  await settle();
+  expect(store.state!.weeklyPlans[0].name).toBe("Client B");
+  harness.push.mockResolvedValue({
+    kind: "conflict",
+    revision: 2,
+    server: remote,
+  });
+  await act(async () =>
+    store.update((s) => ({
+      ...s,
+      weeklyPlans: [withEditBasis(opening, { ...opening, name: "Client A" })],
+    })),
+  );
+  await settle();
+  expect(harness.push.mock.calls.at(-1)?.[0].expectedRevision).toBe(1);
+  expect(store.syncStatus).toBe("conflict");
+  expect(store.conflict?.server?.name).toBe("Client B");
+  expect((await loadAccount(owner))?.state.weeklyPlans[0].name).toBe(
+    "Client A",
+  );
+});

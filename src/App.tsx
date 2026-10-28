@@ -1,3 +1,4 @@
+import { withEditBasis } from "./data/editBasis";
 import { accountSyncEnabled } from "./data/client";
 import { SyncPanel, syncLabel } from "./ui/SyncPanel";
 import { t as tr } from "./i18n";
@@ -71,6 +72,11 @@ export function App() {
   const [settings, setSettings] = useState(false);
   const [resumePrompt, setResumePrompt] = useState(false);
   const [toast, setToast] = useState("");
+  useEffect(() => {
+    setEditor(null);
+    setResumePrompt(false);
+    setToast("");
+  }, [store.accountOwner]);
   const active = state?.sessions.find((s) => s.status === "active");
   const previousActive = useRef<string | undefined>(undefined);
   const heading = useRef<HTMLElement>(null);
@@ -342,6 +348,7 @@ export function App() {
           exercises={state.exercises}
           onClose={() => setEditor(null)}
           onSave={(t) => {
+            if (editor !== "new") t = withEditBasis(editor, t);
             update((s) => ({
               ...s,
               templates: s.templates.some((x) => x.id === t.id)

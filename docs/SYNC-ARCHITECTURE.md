@@ -51,3 +51,15 @@ Lokaler isolierter Testserver: http://127.0.0.1:5186 und http://localhost:5186, 
 WICHTIG: Paralleler Notiztest in zwei Clients hat eine ältere Formularfassung mit aktualisierter Basisrevision übertragen, statt einen Konflikt auszulösen. Dialogschutz ergänzt (Zähler und tatsächlicher offener Dialog), erneute Zwei-Client-Konfliktprüfung noch NICHT bestanden. Daher keine geschlossene Testfreigabe.
 
 Importdialog schließt erst nach erfolgreicher lokaler Speicherung, Fehler bleiben sichtbar. Neueste lokale Konfliktfassung wird gezeigt; Serverübernahme erfordert vorherigen Export. Permanente Serverfehler stoppen automatische Wiederholungen. 93 Tests einschließlich echter Hook-/IndexedDB-Abläufe mit simuliertem Transport bestehen. Echte Offline-/Konflikt-/Gastimport-Browserabnahme und physische Gerätetests bleiben offen.
+
+## Neuester Stand: ursprüngliche Bearbeitungsrevision · Browser nachgeprüft
+
+Ursache des nachgewiesenen Fehlers: stageAccount berechnete erwartete Revisionen aus dem aktuellen Speicher, obwohl das Formular einen älteren Entitätsstand enthielt. editBasis.ts hält unveränderliche Bearbeitungsbasen für angezeigte Entitäten fest. Übungsnotizen und Workout-Editor übertragen diese explizit; update liest sie vor der Zod-Kopie und stageAccount verwendet die ursprüngliche Revision. Kontofremde Bearbeitungsbasen werden abgewiesen. Ein Dialogschutz allein ist ausdrücklich keine Korrektheitsgarantie. Weitere Formular-/Draft-Pfade sind noch auf dieselbe Garantie zu prüfen.
+
+Regression nachgewiesen: Test mit zwischenzeitlich neuerem Cloud-Snapshot erwartet beim alten Formular Revision 1 statt 2. Ohne die neue Revisionsübernahme schlägt der Test mit genau 2 statt 1 fehl; nach Wiederherstellung besteht er. Insgesamt 94 Tests bestanden.
+
+Arc-Abnahme nach vollständigem Reload beider Ursprünge: A öffnet Übungsnotizen, B speichert eine abweichende Fassung, A speichert ältere Bearbeitung. Konflikt erscheint; Vergleich zeigt QA Revisionstest A2 lokal und B2 auf dem Server. Auswahl „Neueste lokale Fassung behalten“ führt wieder zu Synchronisiert. Die Browserprüfung der Serverübernahme und erneuter Konflikte während der Auflösung ist noch offen.
+
+Echte Browser-Netzwerksimulation: DevTools Offline gewählt, QA-Notiz geändert und lokal gespeichert, anschließend No throttling wiederhergestellt. Browser zeigt danach Synchronisiert; Netzwerkpanel bestätigt euzen_sync_push und euzen_sync_pull jeweils HTTP 200. DevTools anschließend geschlossen, keine Netzwerksimulation zurückgelassen. Offline-Reload einer installierten Produktions-PWA ist damit NICHT belegt.
+
+Freigabe weiterhin NEIN: Gastimport-Browserabnahme, vollständige Wiederherstellungs-/Generationswechselprüfung, übrige Draft-/Formularpfade und Geräteabnahme fehlen. Beide lokalen Testursprünge laufen weiterhin experimentell; normale Builds behalten Sync deaktiviert. Keine Produktionsveröffentlichung.

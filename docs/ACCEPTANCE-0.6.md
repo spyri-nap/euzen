@@ -14,3 +14,5 @@
 Lokale Basis: Node >=22.12, npm ci, npm test, npm run build. Normale App: npm run dev. Kontosync bleibt standardmäßig aus. VITE_ACCOUNT_SYNC_ENABLED nicht für Nutzerbestände aktivieren, bevor die offenen Abnahmepunkte erfüllt sind. Kein Deployment ausgelöst.
 
 Neueste Browserbelege und Einschränkungen stehen im letzten Abschnitt von SYNC-ARCHITECTURE.md. Kontoanmeldung, Workout-/Session-Upload und unabhängiger Zweitclient-Abruf in Arc geprüft. Zwei-Client-Konfliktprüfung hat einen Fehler gezeigt; Schutz ergänzt, Wiederholungsprüfung offen. Keine Freigabe.
+
+Aktuellste Entscheidung: weiterhin keine geschlossene Testfreigabe. Der ursprünglich beobachtete Notiz-Konflikt ist jetzt durch eine feste Bearbeitungsrevision korrigiert und in zwei frisch geladenen Arc-Clients mit lokaler Konfliktauflösung nachgeprüft. Offline-Änderung und Wiederverbindung wurden im Browser bestanden. Weitere Freigabepunkte stehen im letzten Abschnitt von SYNC-ARCHITECTURE.md.

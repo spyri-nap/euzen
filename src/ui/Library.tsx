@@ -1,3 +1,4 @@
+import { withEditBasis } from "../data/editBasis";
 import { t as tr } from "../i18n";
 import { useState } from "react";
 import {
@@ -161,7 +162,9 @@ export function Library({ state, update }: Props) {
           onSave={(e) => {
             update((s) => ({
               ...s,
-              exercises: s.exercises.map((x) => (x.id === e.id ? e : x)),
+              exercises: s.exercises.some((x) => x.id === e.id)
+                ? s.exercises.map((x) => (x.id === e.id ? e : x))
+                : [...s.exercises, e],
             }));
             setSelected(null);
           }}
@@ -218,7 +221,10 @@ function ExerciseDetails({
         />
       </Field>
       <div className="modal-actions">
-        <button className="btn primary" onClick={() => onSave({ ...e, notes })}>
+        <button
+          className="btn primary"
+          onClick={() => onSave(withEditBasis(e, { ...e, notes }))}
+        >
           {tr("Notizen speichern")}
         </button>
       </div>
