@@ -1,5 +1,6 @@
 import { t as tr } from "../i18n";
 import { useEffect, useState } from "react";
+import { BetaGuide } from "./BetaGuide";
 type InstallEvent = Event & { prompt: () => Promise<void> };
 export function MobileApp({ blocked }: { blocked: boolean }) {
   const [status, setStatus] = useState(
@@ -93,6 +94,7 @@ export function MobileApp({ blocked }: { blocked: boolean }) {
   return (
     <details className="mobile-help panel">
       <summary>{tr("App installieren, Updates & Hilfe · Version 0.6")}</summary>
+      <BetaGuide />
       <p>
         Eúzēn · Closed Beta · <a href="/impressum.html">Impressum / Provider</a>{" "}
         · <a href="mailto:info@nap-studios.de">Support</a>
