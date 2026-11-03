@@ -86,25 +86,25 @@ export function Progress({
           icon={<Check size={19} />}
           value={String(stats.complete)}
           label={tr("Abgeschlossene Workouts")}
-          detail={`${stats.incomplete} unvollständig`}
+          detail={`${stats.incomplete} ${tr("unvollständig")}`}
         />
         <Stat
           icon={<Clock3 size={19} />}
           value={`${number(stats.minutes, 1)} min`}
           label={tr("Trainingszeit")}
-          detail="inkl. laufender Pausen"
+          detail={tr("inkl. laufender Pausen")}
         />
         <Stat
           icon={<Activity size={19} />}
           value={String(stats.days)}
           label={tr("Aktive Trainingstage")}
-          detail={`${stats.results} Arbeitsschritte`}
+          detail={`${stats.results} ${tr("Arbeitsschritte")}`}
         />
         <Stat
           icon={<Dumbbell size={19} />}
           value={stats.volume === null ? "—" : `${number(stats.volume)} kg`}
           label={tr("Protokollierte Volumenlast")}
-          detail="nur geeignete Last × Reps"
+          detail={tr("nur geeignete Last × Reps")}
         />
       </div>
       {period !== "all" && (

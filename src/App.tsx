@@ -217,10 +217,6 @@ export function App() {
             </span>
           </div>
         </header>
-        <BetaGuide />
-        <MobileApp
-          blocked={Boolean(active || editor || settings || saving || error)}
-        />
         {error && (
           <div className="notice error" role="alert">
             {tr(error)}
@@ -307,6 +303,12 @@ export function App() {
             )}
           </fieldset>
         </main>
+        {view !== "train" && <BetaGuide />}
+        <div hidden={view === "train"}>
+          <MobileApp
+            blocked={Boolean(active || editor || settings || saving || error)}
+          />
+        </div>
         <footer className="app-footer">
           <span>
             {tr("Eúzēn ")}
@@ -591,7 +593,7 @@ function Today({
                 className={`week-day ${day === today ? "today" : ""}`}
                 key={day}
                 onClick={() => onNavigate("plan")}
-                aria-label={`${formatDate(day, { weekday: "long", day: "numeric", month: "long" })}: ${entries.map((p) => p.label).join(", ") || "frei"}`}
+                aria-label={`${formatDate(day, { weekday: "long", day: "numeric", month: "long" })}: ${entries.map((p) => p.label).join(", ") || tr("frei")}`}
               >
                 <span>{formatDate(day, { weekday: "short" })}</span>
                 <strong>{formatDate(day, { day: "numeric" })}</strong>

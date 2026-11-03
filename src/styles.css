@@ -12,12 +12,19 @@
   --paper: #fffefa;
   --accent: #b5bd9b;
   --terracotta: #9d6048;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --control-size: 44px;
 }
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
+  overflow-wrap: break-word;
 }
 button,
 input,
@@ -2958,5 +2965,128 @@ details[open] summary {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Shared mobile ergonomics: retain readable labels and room for the home indicator. */
+.button-row {
+  flex-wrap: wrap;
+}
+.field,
+.app-fieldset,
+.page-heading > div {
+  min-width: 0;
+}
+.table-scroll {
+  max-width: 100%;
+  min-width: 0;
+  position: relative;
+}
+.icon-button,
+.icon-btn,
+.mobile-settings {
+  min-width: var(--control-size);
+  min-height: var(--control-size);
+}
+.modal {
+  overscroll-behavior: contain;
+  scroll-padding: 24px;
+}
+.modal-head {
+  position: sticky;
+  top: -26px;
+  z-index: 2;
+  background: #fcfcf6;
+  padding-block: 12px;
+}
+.modal-actions {
+  flex-wrap: wrap;
+}
+.btn {
+  white-space: normal;
+  text-align: center;
+}
+.player-main {
+  font-variant-numeric: tabular-nums;
+}
+.main-shell > details.panel,
+.main-shell > div > .mobile-help {
+  margin-inline: clamp(20px, 4vw, 64px);
+  padding: 16px 20px;
+}
+.main-shell > details.panel > summary,
+.mobile-help > summary {
+  min-height: var(--control-size);
+  align-content: center;
+}
+input[type="checkbox"] {
+  flex-shrink: 0;
+}
+.metric-options label,
+.rating label {
+  min-height: var(--control-size);
+}
+@media (max-width: 560px) {
+  .sidebar {
+    height: calc(68px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .sidebar nav {
+    height: 68px;
+  }
+  .main-shell {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom));
+  }
+  .sidebar .nav-link,
+  .nav-link > span {
+    font-size: 11px;
+    line-height: 1.25;
+  }
+  .page-heading > div > p:last-child,
+  .player-cue {
+    font-size: 14px;
+  }
+  .eyebrow,
+  .hero-kicker {
+    font-size: 11px;
+  }
+  .number-grid .field > span,
+  .settings-counts {
+    font-size: 12px;
+  }
+  .player-top > span {
+    max-width: 45%;
+    font-size: 12px;
+  }
+  .sticky-actions {
+    padding-bottom: max(15px, env(safe-area-inset-bottom));
+  }
+  .btn.small-btn,
+  .text-button,
+  .chips button {
+    min-height: var(--control-size);
+  }
+  .modal .two-col .field > span,
+  .field > span {
+    font-size: 12px;
+  }
+  .checkin-card > p:not(.eyebrow),
+  .modal p {
+    font-size: 14px;
+  }
+  .checkin-card .eyebrow,
+  .hero-caption,
+  .app-footer {
+    font-size: 11px;
+  }
+  .modal-head {
+    top: -22px;
+  }
+  .section-head,
+  .page-heading {
+    flex-wrap: wrap;
+  }
+  .exercise-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

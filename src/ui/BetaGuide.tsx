@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "../i18n";
 
 export const guides = {
   de: {
@@ -117,14 +118,20 @@ export const guides = {
   },
 };
 export function BetaGuide() {
-  const [language, setLanguage] = useState<keyof typeof guides>(() => {
-    try {
-      const saved = localStorage.getItem("euzen-beta-language");
-      return saved === "en" || saved === "el" ? saved : "de";
-    } catch {
-      return "de";
-    }
-  });
+  const interfaceLanguage = useLanguage();
+  const [preferredLanguage, setLanguage] = useState<keyof typeof guides | null>(
+    () => {
+      try {
+        const saved = localStorage.getItem("euzen-beta-language");
+        return saved === "en" || saved === "el" || saved === "de"
+          ? saved
+          : null;
+      } catch {
+        return null;
+      }
+    },
+  );
+  const language = preferredLanguage ?? interfaceLanguage;
   const [values, setValues] = useState<Record<number, string>>({});
   const [priority, setPriority] = useState(0);
   const copy = guides[language];

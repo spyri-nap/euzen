@@ -34,17 +34,17 @@ export function Onboarding({
   const copy = en
     ? [
         "No example workouts or exercises are added automatically. You decide where to start.",
-        "Think about your goals, equipment and available time. Account-based preferences will follow once Supabase is configured.",
+        "Choose your goals, equipment and available time. You can start as a guest and connect an account in Settings & Data when account access is enabled.",
         "Create an exercise with a name, movement pattern and measurements.",
         "Choose your exercises and targets, then schedule a session if you like.",
-        "This version saves locally. Export regular JSON backups. Cloud accounts and sync are not connected yet; a Vercel login is not an Eúzēn account.",
+        "Guest data stays on this device. With an enabled Eúzēn account, check the sync status in Settings & Data. Export regular backups. The test-access login and your Eúzēn account are separate.",
       ]
     : [
         "Es werden keine Beispielworkouts oder Übungen automatisch hinzugefügt. Du entscheidest, womit du beginnst.",
-        "Überlege dir Ziele, Equipment und verfügbare Zeit. Kontobezogene Einstellungen folgen nach der Supabase-Einrichtung.",
+        "Wähle Ziele, Equipment und verfügbare Zeit. Starte als Gast und verbinde bei aktiviertem Kontozugang dein Konto unter Einstellungen & Daten.",
         "Lege eine Übung mit Name, Bewegungsmuster und Messgrößen an.",
         "Wähle Übungen und Vorgaben und plane anschließend optional eine Einheit.",
-        "Dieser Stand speichert lokal. Exportiere regelmäßig JSON-Backups. Cloud-Konten und Sync sind noch nicht verbunden; die Vercel-Anmeldung ist kein Eúzēn-Konto.",
+        "Gastdaten bleiben auf diesem Gerät. Mit aktiviertem Eúzēn-Konto prüfst du den Sync-Status unter Einstellungen & Daten. Exportiere regelmäßig Backups. Testzugang und Eúzēn-Konto sind getrennte Anmeldungen.",
       ];
   const move = (n: number) =>
     update((s) => ({

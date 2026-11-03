@@ -149,10 +149,18 @@ export function Library({ state, update }: Props) {
       </div>
       {!shown.length && (
         <Empty
-          title={tr("Noch kein Treffer")}
-          text={tr(
-            "Versuche einen anderen Suchbegriff oder ändere die Filter.",
+          title={tr(
+            state.exercises.length
+              ? "Noch kein Treffer"
+              : "Erste Übung anlegen",
           )}
+          text={tr(
+            state.exercises.length
+              ? "Versuche einen anderen Suchbegriff oder ändere die Filter."
+              : "Für dein erstes Workout brauchst du zunächst eine eigene Übung.",
+          )}
+          action={state.exercises.length ? undefined : tr("Eigene Übung")}
+          onAction={() => setCreating(true)}
         />
       )}
       {selected && (
