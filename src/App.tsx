@@ -892,22 +892,24 @@ function Settings({
             "Keine Werbetracker. Keine externen KI-Anfragen. Keine verbundenen Gesundheitsdienste.",
           )}
         </div>
-        <div className="button-row legal-links">
-          <button
-            className="btn"
-            type="button"
-            onClick={() => setLegalPage("privacy")}
-          >
-            {tr("Datenschutz")}
-          </button>
-          <button
-            className="btn"
-            type="button"
-            onClick={() => setLegalPage("imprint")}
-          >
-            {tr("Impressum")}
-          </button>
-        </div>
+      </fieldset>
+      <div className="button-row legal-links">
+        <button
+          className="btn"
+          type="button"
+          onClick={() => setLegalPage("privacy")}
+        >
+          {tr("Datenschutz")}
+        </button>
+        <button
+          className="btn"
+          type="button"
+          onClick={() => setLegalPage("imprint")}
+        >
+          {tr("Impressum")}
+        </button>
+      </div>
+      <fieldset className="app-fieldset" disabled={readonly}>
         <div className="settings-counts">
           <span>
             {state.exercises.length}

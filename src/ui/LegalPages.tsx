@@ -69,9 +69,11 @@ const copy = {
 export function LegalPages({
   page,
   onClose,
+  onConfirm,
 }: {
   page: LegalPage;
   onClose: () => void;
+  onConfirm?: () => void;
 }) {
   const language = getLanguage() === "en" ? "en" : "de";
   const content =
@@ -127,6 +129,13 @@ export function LegalPages({
           </a>
         </p>
       </article>
+      {onConfirm && (
+        <button type="button" className="btn primary" onClick={onConfirm}>
+          {language === "en"
+            ? "Privacy information understood"
+            : "Datenschutz verstanden"}
+        </button>
+      )}
     </Modal>
   );
 }

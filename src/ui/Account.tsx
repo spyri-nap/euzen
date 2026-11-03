@@ -3,6 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import { AccountError, AccountService, type Profile } from "../data/auth";
 import { getLanguage, useLanguage } from "../i18n";
 import { Field } from "./common";
+import { LegalPages } from "./LegalPages";
 
 import { client, accountSyncEnabled } from "../data/client";
 const service = client ? new AccountService(client) : null;
@@ -104,13 +105,9 @@ export function Account() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState(false);
-  const [consent, setConsent] = useState(() => {
-    try {
-      return localStorage.getItem("euzen-test-consent-v1") === "accepted";
-    } catch {
-      return false;
-    }
-  });
+  const [consent, setConsent] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [privacyUnderstood, setPrivacyUnderstood] = useState(false);
   const [clock, setClock] = useState(Date.now());
   const epoch = useRef(0);
   const alive = useRef(false);
@@ -190,7 +187,7 @@ export function Account() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (!consent) {
+              if (!consent || !privacyUnderstood) {
                 setError(text("consentRequired"));
                 return;
               }
@@ -219,7 +216,15 @@ export function Account() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </Field>
-            <button className="btn" disabled={busy || clock < service.retryAt}>
+            <button
+              className="btn"
+              disabled={
+                busy ||
+                !consent ||
+                !privacyUnderstood ||
+                clock < service.retryAt
+              }
+            >
               {text("send")}
             </button>
           </form>
@@ -227,6 +232,7 @@ export function Account() {
             <input
               type="checkbox"
               checked={consent}
+              disabled={!privacyUnderstood}
               onChange={(e) => {
                 setConsent(e.target.checked);
                 setError("");
@@ -240,12 +246,39 @@ export function Account() {
               }}
             />
             <span>
-              {text("consent")}{" "}
-              <a href="/datenschutz.html" target="_blank" rel="noreferrer">
-                {text("consentLink")}
-              </a>
+              {getLanguage() === "en"
+                ? "I agree to participate in the closed test."
+                : "Ich stimme der Teilnahme am geschlossenen Test zu."}
             </span>
           </label>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => setPrivacyOpen(true)}
+          >
+            {getLanguage() === "en"
+              ? "Read privacy information"
+              : "Datenschutz lesen"}
+          </button>
+          <p className="hint">
+            {privacyUnderstood
+              ? getLanguage() === "en"
+                ? "Privacy information confirmed."
+                : "Datenschutzinformationen bestätigt."
+              : getLanguage() === "en"
+                ? "Please read and confirm the privacy information first."
+                : "Bitte lies und bestätige zuerst die Datenschutzinformationen."}
+          </p>
+          {privacyOpen && (
+            <LegalPages
+              page="privacy"
+              onClose={() => setPrivacyOpen(false)}
+              onConfirm={() => {
+                setPrivacyUnderstood(true);
+                setPrivacyOpen(false);
+              }}
+            />
+          )}
           {notice && <p role="status">{text("sent")}</p>}
           {clock < service.retryAt && <p>{text("cooldown")}</p>}
           {sentTo && (
