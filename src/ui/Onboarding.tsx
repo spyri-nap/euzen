@@ -53,7 +53,7 @@ export function Onboarding({
     }));
   return (
     <section
-      className="panel section-gap"
+      className="panel onboarding"
       aria-label={en ? "Getting started" : "Einführung"}
     >
       <p className="eyebrow">EÚZĒN · {step + 1}/5</p>

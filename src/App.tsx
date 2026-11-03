@@ -303,8 +303,8 @@ export function App() {
             )}
           </fieldset>
         </main>
-        {view !== "train" && <BetaGuide />}
-        <div hidden={view === "train"}>
+        <div className="support-stack" hidden={view === "train"}>
+          {view !== "train" && <BetaGuide />}
           <MobileApp
             blocked={Boolean(active || editor || settings || saving || error)}
           />
