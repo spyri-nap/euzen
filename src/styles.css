@@ -1156,6 +1156,21 @@ details[open] summary {
   padding-top: 18px;
   border-top: 1px solid var(--line);
 }
+.legal-content {
+  max-width: 72ch;
+}
+.legal-content section + section {
+  margin-top: var(--space-3);
+}
+.legal-content h3 {
+  margin-bottom: var(--space-1);
+}
+.legal-content p {
+  line-height: 1.65;
+}
+.legal-links {
+  margin: var(--space-3) 0;
+}
 .field {
   display: flex;
   flex-direction: column;

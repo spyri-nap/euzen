@@ -48,6 +48,7 @@ import { Space } from "./ui/Space";
 import { MobileApp } from "./ui/MobileApp";
 import { BetaGuide } from "./ui/BetaGuide";
 import { Onboarding } from "./ui/Onboarding";
+import { LegalPages } from "./ui/LegalPages";
 const Account = lazy(() =>
   import("./ui/Account").then((m) => ({ default: m.Account })),
 );
@@ -826,6 +827,9 @@ function Settings({
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [restoring, setRestoring] = useState(false);
+  const [legalPage, setLegalPage] = useState<"privacy" | "imprint" | null>(
+    null,
+  );
   return (
     <Modal title={tr("Deine Daten. Dein Raum.")} onClose={onClose}>
       <fieldset className="app-fieldset" disabled={readonly}>
@@ -887,6 +891,22 @@ function Settings({
           {tr(
             "Keine Werbetracker. Keine externen KI-Anfragen. Keine verbundenen Gesundheitsdienste.",
           )}
+        </div>
+        <div className="button-row legal-links">
+          <button
+            className="btn"
+            type="button"
+            onClick={() => setLegalPage("privacy")}
+          >
+            {tr("Datenschutz")}
+          </button>
+          <button
+            className="btn"
+            type="button"
+            onClick={() => setLegalPage("imprint")}
+          >
+            {tr("Impressum")}
+          </button>
         </div>
         <div className="settings-counts">
           <span>
@@ -1015,6 +1035,9 @@ function Settings({
           </p>
         </details>
       </fieldset>
+      {legalPage && (
+        <LegalPages page={legalPage} onClose={() => setLegalPage(null)} />
+      )}
     </Modal>
   );
 }
