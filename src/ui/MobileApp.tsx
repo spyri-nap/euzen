@@ -93,6 +93,10 @@ export function MobileApp({ blocked }: { blocked: boolean }) {
   return (
     <details className="mobile-help panel">
       <summary>{tr("App installieren, Updates & Hilfe · Version 0.6")}</summary>
+      <p>
+        Eúzēn · Closed Beta · <a href="/impressum.html">Impressum / Provider</a>{" "}
+        · <a href="mailto:info@nap-studios.de">Support</a>
+      </p>
       <p role="status">
         {online ? tr("Netzwerk laut Gerät verfügbar") : tr("Offline")} ·{" "}
         {tr(status)}

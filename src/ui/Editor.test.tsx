@@ -7,6 +7,13 @@ import { initialState } from "../domain/seed";
 import { draftKey } from "../data/workoutDraft";
 it("retains a draft after persistence failure and removes it only after confirmed success", async () => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+  // Node's experimental global storage must not shadow jsdom's browser storage.
+  const storage = new Map<string, string>();
+  vi.stubGlobal("localStorage", {
+    getItem: (key: string) => storage.get(key) ?? null,
+    setItem: (key: string, value: string) => storage.set(key, value),
+    removeItem: (key: string) => storage.delete(key),
+  });
   HTMLDialogElement.prototype.showModal = function () {
     this.setAttribute("open", "");
   };
@@ -56,5 +63,6 @@ it("retains a draft after persistence failure and removes it only after confirme
     await act(async () => root.unmount());
     container.remove();
     localStorage.removeItem(key);
+    vi.unstubAllGlobals();
   }
 });

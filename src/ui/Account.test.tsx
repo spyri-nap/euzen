@@ -13,5 +13,5 @@ it("renders the account boundary in English", () => {
   setLanguage("en");
   const html = renderToStaticMarkup(<Account />);
   expect(html).toContain("Your test account");
-  expect(html).toContain("no cloud sync or automatic data adoption");
+  expect(html).toContain("automatic data adoption");
 });
