@@ -1,5 +1,17 @@
 # Geschlossener Test · 03.11.2026
 
+Finale technische Preview: https://euzen-amo0ers6w-nap-studios.vercel.app · Deployment `dpl_BP4Ud5hZk1xg3coD5Vz7UdT9NXMZ` · READY · Cloud-PWA-Build `a3b763471cf4`. Diese Angaben ersetzen die vorherigen Preview-IDs unten. Der Service Worker liefert statische Rechts-/Datenseiten nun korrekt aus; seine Implementierung fließt in die Build-ID ein. 110 lokale Tests erfolgreich (19 Dateien). Die Cloud führte vor dem zusätzlichen Regressionstest 109 Tests erfolgreich aus und baute denselben Anwendungscode. Arc: App als leerer Gastbereich, Guide öffnen, griechische Auswahl und Feedback-mailto sichtbar; Datenschutzseite erreichbar. Unabhängiger Browser ohne Anmeldung zeigt Vercel-Login. Kein Feedback versendet.
+
+## Aktueller Abschlussstand
+
+Die folgenden aktuellen Angaben ersetzen die historischen Bereitstellungsangaben weiter unten: Preview https://euzen-k1dbq2w87-nap-studios.vercel.app, Deployment `dpl_9zF6rRK1otkkc83CYW3HN1iZN8tj`, Status READY. Grundlage Commit `073f269` mit abschließender Guide-/Teständerung, siehe Git-Historie. Lokaler Sync-PWA-Build `2dd97dd025b3`; Cloud-ID siehe Buildlogs/App-Hilfe. 109 Tests erfolgreich (18 Dateien), Formatprüfung und Sync-Build erfolgreich. Guide direkt oberhalb der allgemeinen Hilfe sichtbar; Anleitung DE/EN/EL, App-Oberfläche DE/EN. Start über BETA-GUIDE-DE.md, BETA-GUIDE-EN.md oder BETA-GUIDE-EL.md. Einladungen in BETA-INVITATIONS.md sind Entwürfe, kein Versand erfolgt. Testzeitraum ab 03.11.2026; Ende nicht festgelegt.
+
+Impressum unter `/impressum.html`, technische Dateninformationen unter `/datenschutz.html`, beide im Guide verlinkt. Die technische Seite ist keine rechtlich abschließend geprüfte Datenschutzerklärung. Extern zu klären: Rechtsgrundlage, konkrete Aufbewahrungs-/Löschregelung und vertragliche Datenschutzangaben der eingesetzten Dienste. Auch fiktive Trainingsinhalte ersetzen diese Klärung nicht, da Konten persönliche E-Mail-Adressen verwenden. Keine externe Datenfreigabe behaupten.
+
+Der Nutzer bestätigte am 03.11.2026 den Vercel-Schutz im privaten Safari-Fenster auf dem iPhone und antwortete auf den App-Testablauf „Hat funktioniert“. Modell und OS-Version fehlen; die neue Guide-Ergänzung ist nicht damit abgenommen. Android ist offen. Ein lokales Zurücksetzen löscht keine Cloud-Konten; Löschwünsche über den Support sicher verifizieren und andere Geräte/Exportdateien berücksichtigen. Kein destruktiver Cloud-Reset ergänzt.
+
+## Historischer Stand vor Guide-Abschluss
+
 Alle Vercel-Aktionen sind auf Projekt `euzen` (`prj_9ibJqXMQm1n4qPdmSQRy1vwKwTEa`) beschränkt. Keine Team-Einstellungen oder Kundenprojekte ändern.
 
 ## Bereitstellung

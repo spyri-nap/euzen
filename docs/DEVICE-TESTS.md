@@ -1,5 +1,7 @@
 # Physische Geräteabnahme · Eúzēn 0.6
 
+Aktualisierung 03.11.2026: Nutzer bestätigt Vercel-Schutz im privaten Safari-Fenster auf dem iPhone und erfolgreichen Ablauf mit „Hat funktioniert“. Modell/OS-Version und Einzelmessungen fehlen. Die bisherige Bestätigung gilt nicht automatisch für die neue Guide-Ergänzung. Android bleibt offen. Die folgende ursprüngliche Checkliste bleibt zur reproduzierbaren Abnahme erhalten.
+
 Die lokale Desktop-Web-Abnahme ist durchgeführt. Die folgenden Punkte sind die physische Geräteabnahme, keine weiteren Entwicklungsfeatures. Ein iPhone ist verfügbar; eine Android-Testperson kann der Nutzer organisieren. Es wurden bisher keine physischen Tests behauptet.
 
 ## Voraussetzung

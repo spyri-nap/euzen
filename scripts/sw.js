@@ -24,7 +24,9 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       caches
         .open(CACHE)
-        .then((c) => c.match("/index.html"))
+        .then((c) =>
+          c.match(ASSETS.includes(url.pathname) ? url.pathname : "/index.html"),
+        )
         .then((r) => r || fetch(event.request)),
     );
   } else if (ASSETS.includes(url.pathname)) {

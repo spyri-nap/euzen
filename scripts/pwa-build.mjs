@@ -66,8 +66,9 @@ const assets = (await files(outDir))
   .sort();
 const hash = createHash("sha256");
 for (const file of assets) hash.update(await readFile(outDir + file));
-const build = hash.digest("hex").slice(0, 12);
 const template = await readFile("scripts/sw.js", "utf8");
+hash.update(template);
+const build = hash.digest("hex").slice(0, 12);
 await writeFile(
   `${outDir}/sw.js`,
   template

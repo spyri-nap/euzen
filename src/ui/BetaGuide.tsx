@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const guides = {
+export const guides = {
   de: {
     title: "Beta-Leitfaden · Test starten",
     intro:
@@ -186,6 +186,7 @@ export function BetaGuide() {
             ))}
           </select>
         </label>
+        <p>{copy.warning}</p>
         <a
           className="btn"
           href={`mailto:info@nap-studios.de?subject=${encodeURIComponent("Eúzēn Beta Feedback")}&body=${encodeURIComponent(`Language: ${language}\n${copy.levels[priority]}\n` + copy.labels.map((label, index) => `${label}: ${values[index] ?? ""}`).join("\n"))}`}

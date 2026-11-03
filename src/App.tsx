@@ -46,6 +46,7 @@ import { Progress } from "./ui/Progress";
 import { Player } from "./ui/Player";
 import { Space } from "./ui/Space";
 import { MobileApp } from "./ui/MobileApp";
+import { BetaGuide } from "./ui/BetaGuide";
 import { Onboarding } from "./ui/Onboarding";
 const Account = lazy(() =>
   import("./ui/Account").then((m) => ({ default: m.Account })),
@@ -216,6 +217,7 @@ export function App() {
             </span>
           </div>
         </header>
+        <BetaGuide />
         <MobileApp
           blocked={Boolean(active || editor || settings || saving || error)}
         />
