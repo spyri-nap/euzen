@@ -66,6 +66,15 @@ const copy = {
     "Deine E-Mail wird für Anmeldung und Kontoverwaltung an Supabase übermittelt. Trainingsdaten werden nur bei freigegebenem Kontosync übertragen.",
     "Your email is sent to Supabase for sign-in and account management. Training data is uploaded only when account sync is enabled.",
   ],
+  consent: [
+    "Ich stimme der Teilnahme am geschlossenen Eúzēn-Test und der Verarbeitung meiner Angaben für Testbetrieb, Fehleranalyse und Verbesserung zu. Die Teilnahme ist freiwillig. Ich gebe keine Diagnosen, Verletzungen, Medikamente oder sonstigen Gesundheitsinformationen ein und kann Auskunft oder Löschung per E-Mail anfordern.",
+    "I agree to participate in the closed Eúzēn test and to the processing of my information for testing, error analysis and improvement. Participation is voluntary. I will not enter diagnoses, injuries, medication or other health information and can request access or deletion by email.",
+  ],
+  consentLink: ["Datenschutzinformation lesen", "Read the privacy information"],
+  consentRequired: [
+    "Bitte bestätige die Testteilnahme.",
+    "Please confirm test participation.",
+  ],
 } as const;
 type Key = keyof typeof copy;
 function text(key: Key) {
@@ -95,6 +104,13 @@ export function Account() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState(false);
+  const [consent, setConsent] = useState(() => {
+    try {
+      return localStorage.getItem("euzen-test-consent-v1") === "accepted";
+    } catch {
+      return false;
+    }
+  });
   const [clock, setClock] = useState(Date.now());
   const epoch = useRef(0);
   const alive = useRef(false);
@@ -174,6 +190,15 @@ export function Account() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              if (!consent) {
+                setError(text("consentRequired"));
+                return;
+              }
+              try {
+                localStorage.setItem("euzen-test-consent-v1", "accepted");
+              } catch {
+                /* non-durable storage */
+              }
               void run(async () => {
                 const target = await service.requestCode(email);
                 if (alive.current) {
@@ -198,6 +223,29 @@ export function Account() {
               {text("send")}
             </button>
           </form>
+          <label className="checkbox-row consent-row">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => {
+                setConsent(e.target.checked);
+                setError("");
+                try {
+                  e.target.checked
+                    ? localStorage.setItem("euzen-test-consent-v1", "accepted")
+                    : localStorage.removeItem("euzen-test-consent-v1");
+                } catch {
+                  /* best effort */
+                }
+              }}
+            />
+            <span>
+              {text("consent")}{" "}
+              <a href="/datenschutz.html" target="_blank" rel="noreferrer">
+                {text("consentLink")}
+              </a>
+            </span>
+          </label>
           {notice && <p role="status">{text("sent")}</p>}
           {clock < service.retryAt && <p>{text("cooldown")}</p>}
           {sentTo && (
