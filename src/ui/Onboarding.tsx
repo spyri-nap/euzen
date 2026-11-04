@@ -34,15 +34,15 @@ export function Onboarding({
   const copy = en
     ? [
         "No example workouts or exercises are added automatically. You decide where to start.",
-        "Choose your goals, equipment and available time. You can start as a guest and connect an account in Settings & Data when account access is enabled.",
-        "Create an exercise with a name, movement pattern and measurements.",
+        "Start locally as a guest. Choose the exercises, equipment and duration in your workout. You can connect an account in Settings & Data when account access is enabled.",
+        "Open Library, choose Create exercise and save a name, movement pattern and measurements. Then return here to build your workout.",
         "Choose your exercises and targets, then schedule a session if you like.",
         "Guest data stays on this device. With an enabled Eúzēn account, check the sync status in Settings & Data. Export regular backups. The test-access login and your Eúzēn account are separate.",
       ]
     : [
         "Es werden keine Beispielworkouts oder Übungen automatisch hinzugefügt. Du entscheidest, womit du beginnst.",
-        "Wähle Ziele, Equipment und verfügbare Zeit. Starte als Gast und verbinde bei aktiviertem Kontozugang dein Konto unter Einstellungen & Daten.",
-        "Lege eine Übung mit Name, Bewegungsmuster und Messgrößen an.",
+        "Starte lokal als Gast. Übungen, Equipment und Dauer wählst du in deinem Workout. Verbinde bei aktiviertem Kontozugang dein Konto unter Einstellungen & Daten.",
+        "Öffne die Bibliothek, wähle Eigene Übung und speichere Name, Bewegungsmuster und Messgrößen. Kehre anschließend hierher zurück, um dein Workout zu erstellen.",
         "Wähle Übungen und Vorgaben und plane anschließend optional eine Einheit.",
         "Gastdaten bleiben auf diesem Gerät. Mit aktiviertem Eúzēn-Konto prüfst du den Sync-Status unter Einstellungen & Daten. Exportiere regelmäßig Backups. Testzugang und Eúzēn-Konto sind getrennte Anmeldungen.",
       ];

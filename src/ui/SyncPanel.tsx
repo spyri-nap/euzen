@@ -68,6 +68,28 @@ export function SyncPanel({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [conflictBackup, setConflictBackup] = useState(false);
+  const help: Record<string, [string, string]> = {
+    pending: [
+      "Deine Änderungen sind auf diesem Gerät gespeichert. Lass die App mit Internetverbindung geöffnet, bis Synchronisiert erscheint.",
+      "Your changes are saved on this device. Keep the app open and connected until Synced appears.",
+    ],
+    offline: [
+      "Du kannst lokal weiterarbeiten. Der Kontoabgleich läuft weiter, sobald die Verbindung zurück ist. Exportiere vor einem Gerätewechsel ein Backup.",
+      "You can continue locally. Account sync resumes when the connection returns. Export a backup before switching devices.",
+    ],
+    readonly: [
+      "Ein anderes Fenster bearbeitet diesen Bereich. Verwende dieses Fenster oder schließe die anderen Eúzēn-Fenster und lade neu.",
+      "Another window is editing this area. Use that window, or close other Eúzēn windows and reload.",
+    ],
+    auth: [
+      "Lokal verfügbare Daten bleiben erhalten. Melde dich erneut an, damit der Kontoabgleich fortgesetzt werden kann.",
+      "Locally available data is preserved. Sign in again to resume account sync.",
+    ],
+    error: [
+      "Der Kontoabgleich ist unterbrochen. Prüfe deine Verbindung und sichere vor dem Schließen ein Backup. Nicht bestätigte Änderungen sind möglicherweise noch nicht dauerhaft gespeichert.",
+      "Account sync is interrupted. Check your connection and export a backup before closing. Unconfirmed changes may not yet be saved durably.",
+    ],
+  };
   const local = conflict
     ? (entities(state).find(
         (e) =>
@@ -80,6 +102,7 @@ export function SyncPanel({
       <p role="status" aria-live="polite">
         {syncLabel(status, saving)}
       </p>
+      {help[status] && <p className="hint">{help[status][en ? 1 : 0]}</p>}
       {conflict && (
         <div>
           <h3>

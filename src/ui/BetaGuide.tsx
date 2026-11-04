@@ -30,7 +30,7 @@ export const guides = {
       "Kontakt (freiwillig)",
     ],
     warning:
-      "Keine Codes, Tokens, privaten Trainingsinhalte oder Backups eingeben. Der Text wird erst nach deiner Prüfung über dein E-Mail-Programm versendet.",
+      "Verwende in dieser Vorbereitungsphase nur fiktive Testinhalte. Keine Codes, Tokens, Diagnosen, privaten Trainingsinhalte oder Backups eingeben. Der Text wird erst nach deiner Prüfung über dein E-Mail-Programm versendet.",
     send: "E-Mail-Entwurf öffnen",
     priority: "Priorität",
     levels: [
@@ -68,7 +68,7 @@ export const guides = {
       "Contact (optional)",
     ],
     warning:
-      "Do not include codes, tokens, private training content or backups. You review and send the text in your email app.",
+      "Use only fictitious test content during this preparation phase. Do not include codes, tokens, diagnoses, private training content or backups. You review and send the text in your email app.",
     send: "Open email draft",
     priority: "Priority",
     levels: [
@@ -106,7 +106,7 @@ export const guides = {
       "Επικοινωνία (προαιρετική)",
     ],
     warning:
-      "Μην εισάγετε κωδικούς, tokens, προσωπικό περιεχόμενο προπόνησης ή αντίγραφα. Ελέγχετε και στέλνετε το κείμενο από την εφαρμογή email σας.",
+      "Σε αυτή τη φάση χρησιμοποιήστε μόνο φανταστικά δοκιμαστικά δεδομένα. Μην εισάγετε κωδικούς, tokens, διαγνώσεις, προσωπικό περιεχόμενο προπόνησης ή αντίγραφα. Ελέγχετε και στέλνετε το κείμενο από την εφαρμογή email σας.",
     send: "Άνοιγμα προσχεδίου email",
     priority: "Προτεραιότητα",
     levels: [

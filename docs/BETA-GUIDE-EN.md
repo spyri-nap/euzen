@@ -1,5 +1,7 @@
 # Eúzēn · Closed test
 
+Preparation version 0.6: use fictitious test content only. Do not enter diagnoses, injuries, medication or real health/training histories. Tasks and voluntary feedback template: TEST-PACK-0.6.md. Technical version and limitations: RELEASE-0.6-TEST.md.
+
 Open your approved test URL and sign into Vercel if prompted. Open the beta guide under app installation, updates and help. The guide supports German, English and Greek; the app interface supports German and English.
 
 Allow 15–20 minutes: Add two exercises, build a workout with repetitions or a timer, complete a short session and save a note. Reopen the app and check sync status. Sign in under Settings & Data using your email code for account sync. Enter codes only in Eúzēn.

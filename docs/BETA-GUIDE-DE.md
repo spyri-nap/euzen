@@ -1,5 +1,7 @@
 # Eúzēn · Geschlossener Test
 
+Vorbereitungsstand 0.6: Verwende ausschließlich fiktive Testinhalte. Keine Diagnosen, Verletzungen, Medikamente oder echte Gesundheits-/Trainingshistorien eingeben. Aufgaben und freiwillige Feedbackvorlage: TEST-PACK-0.6.md. Freigegebener technischer Stand und Einschränkungen: RELEASE-0.6-TEST.md.
+
 Öffne die freigegebene Testadresse und melde dich gegebenenfalls zuerst bei Vercel an. In der App findest du unter „App installieren, Updates & Hilfe“ den Beta-Leitfaden mit Deutsch, Englisch und Griechisch. Die App-Oberfläche unterstützt Deutsch und Englisch.
 
 Plane 15–20 Minuten ein: Lege zwei Übungen und ein Workout mit Wiederholungen oder Timer an. Starte eine kurze Session, schließe sie ab und speichere eine Notiz. Öffne die App erneut und prüfe den Synchronisierungsstatus. Für Kontosync melde dich unter Einstellungen & Daten per E-Mail-Code an. Gib Codes ausschließlich in Eúzēn ein.

@@ -39,6 +39,14 @@ const copy = {
     "Bitte Eingabe prüfen. Codes können ungültig oder abgelaufen sein.",
     "Check your input. Codes may be invalid or expired.",
   ],
+  invalidCode: [
+    "Der Code ist ungültig oder abgelaufen. Prüfe den neuesten Code oder fordere nach der Wartezeit einen neuen an. Deine Trainingsdaten bleiben erhalten.",
+    "The code is invalid or expired. Check the latest code or request a new one after the waiting period. Your training data is preserved.",
+  ],
+  invalidEmail: [
+    "Bitte gib eine gültige E-Mail-Adresse ein.",
+    "Enter a valid email address.",
+  ],
   failed: [
     "Kontoaktion fehlgeschlagen. Bitte erneut versuchen.",
     "Account action failed. Please try again.",
@@ -88,9 +96,11 @@ function failure(e: unknown) {
         ? "offline"
         : e.code === "cooldown"
           ? "cooldown"
-          : ["invalid_code", "invalid_email", "verify_failed"].includes(e.code)
-            ? "invalid"
-            : "failed"
+          : e.code === "invalid_email"
+            ? "invalidEmail"
+            : ["invalid_code", "verify_failed"].includes(e.code)
+              ? "invalidCode"
+              : "failed"
       : "failed",
   );
 }
@@ -189,6 +199,10 @@ export function Account() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+                setError(text("invalidEmail"));
+                return;
+              }
               if (
                 !consent ||
                 !privacyUnderstood ||

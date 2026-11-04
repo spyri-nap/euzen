@@ -54,6 +54,7 @@ it("requires explicit privacy and participation and never requests a code before
         ),
     );
     expect(mocks.requestCode).not.toHaveBeenCalled();
+    expect(container.textContent).toContain("gültige E-Mail-Adresse");
     await act(async () => button("Datenschutz lesen").click());
     await act(async () =>
       container
