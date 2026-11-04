@@ -65,6 +65,11 @@ const nav = [
 export function App() {
   useLanguage();
   const store = useStore();
+  const [slowStart, setSlowStart] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSlowStart(true), 15000);
+    return () => window.clearTimeout(timer);
+  }, []);
   const { state, update, error, saving, readonly, retry, syncStatus } = store;
   useEffect(() => {
     if (state) setLanguage(state.preferences.language);
@@ -128,6 +133,11 @@ export function App() {
           <>
             <div className="loading-orbit" />
             <p>{tr("Dein Raum für Bewegung wird geöffnet …")}</p>
+            {slowStart && (
+              <button className="btn" onClick={() => location.reload()}>
+                {tr("Erneut öffnen")}
+              </button>
+            )}
           </>
         )}
       </main>

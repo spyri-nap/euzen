@@ -126,6 +126,8 @@ export function Account() {
       setCode("");
       setError("");
       setNotice(false);
+      setConsent(false);
+      setPrivacyUnderstood(false);
     });
     const tick = window.setInterval(() => setClock(Date.now()), 1000);
     return () => {
@@ -187,7 +189,11 @@ export function Account() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (!consent || !privacyUnderstood) {
+              if (
+                !consent ||
+                !privacyUnderstood ||
+                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+              ) {
                 setError(text("consentRequired"));
                 return;
               }

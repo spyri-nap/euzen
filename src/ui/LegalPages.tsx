@@ -1,10 +1,28 @@
 import { Modal } from "./common";
+import { useState, type ReactNode } from "react";
 import { useLanguage } from "../i18n";
 import privacyDocument from "../../public/datenschutz.html?raw";
 import imprintDocument from "../../public/impressum.html?raw";
 import privacyEnglish from "../../public/privacy-en.html?raw";
 
 type LegalPage = "privacy" | "imprint";
+export function LegalButton({
+  page,
+  children,
+}: {
+  page: LegalPage;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" className="btn" onClick={() => setOpen(true)}>
+        {children}
+      </button>
+      {open && <LegalPages page={page} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
 
 const copy = {
   de: {
@@ -143,6 +161,11 @@ export function LegalPages({
       </article>
       {onConfirm && (
         <div className="modal-actions">
+          <p className="hint">
+            {language === "en"
+              ? "This acknowledgement does not authorize processing of health data."
+              : "Diese Bestätigung erlaubt keine Verarbeitung von Gesundheitsdaten."}
+          </p>
           <button type="button" className="btn primary" onClick={onConfirm}>
             {language === "en"
               ? "Privacy information read and understood"

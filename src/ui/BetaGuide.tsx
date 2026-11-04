@@ -201,13 +201,17 @@ export function BetaGuide() {
           {copy.send}
         </a>
         <p>
-          <a href="/datenschutz.html">
+          <LegalButton page="privacy">
             Datenschutz / Privacy / Προσωπικά δεδομένα
-          </a>{" "}
-          · <a href="/impressum.html">Impressum / Provider / Πάροχος</a> ·{" "}
-          <a href="mailto:info@nap-studios.de">Support</a>
+          </LegalButton>{" "}
+          ·{" "}
+          <LegalButton page="imprint">
+            Impressum / Provider / Πάροχος
+          </LegalButton>{" "}
+          · <a href="mailto:info@nap-studios.de">Support</a>
         </p>
       </section>
     </details>
   );
 }
+import { LegalButton } from "./LegalPages";

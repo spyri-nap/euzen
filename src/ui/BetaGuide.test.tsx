@@ -40,9 +40,7 @@ it("restores Greek and builds feedback only from explicit form entries", async (
     });
     expect(storage.get("euzen-beta-language")).toBe("en");
     expect(container.querySelector("section")?.lang).toBe("en");
-    expect(
-      container.querySelector('a[href="/datenschutz.html"]'),
-    ).not.toBeNull();
+    expect(container.textContent).toContain("Privacy");
   } finally {
     await act(async () => root.unmount());
     container.remove();
