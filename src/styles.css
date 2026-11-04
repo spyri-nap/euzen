@@ -1144,6 +1144,9 @@ details[open] summary {
   margin-bottom: var(--card-gap);
 }
 .modal-head h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  flex: 1;
   margin: 0;
   font-size: 29px;
 }
@@ -1161,6 +1164,9 @@ details[open] summary {
 .legal-content {
   max-width: 72ch;
   overflow-wrap: anywhere;
+}
+.modal-head .icon-btn {
+  flex-shrink: 0;
 }
 .legal-content section + section {
   margin-top: var(--card-gap);

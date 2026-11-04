@@ -140,7 +140,11 @@ export function LegalPages({
               <p>{text}</p>
             </section>
           ))}
+        {page === "imprint" && language === "en" && (
+          <p>Dated 3 November 2026.</p>
+        )}
         <div
+          hidden={page === "imprint" && language === "en"}
           lang={page === "privacy" ? language : "de"}
           dangerouslySetInnerHTML={{
             __html: (page === "privacy"

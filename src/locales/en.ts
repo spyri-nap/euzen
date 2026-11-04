@@ -1,4 +1,6 @@
 export const english: Record<string, string> = {
+  Datenschutz: "Privacy",
+  Impressum: "Imprint",
   unvollständig: "incomplete",
   "inkl. laufender Pausen": "including elapsed rests",
   "nur geeignete Last × Reps": "eligible load × reps only",
