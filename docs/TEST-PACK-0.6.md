@@ -10,7 +10,7 @@ Hi,
 
 I'd like to invite you to a small, closed test of Eúzēn — a space to create your own functional workouts and build a sustainable movement routine.
 
-Use the versioned preview linked in RELEASE-0.6-TEST.md. You may first see Vercel's protected-access sign-in. Access must be approved separately; having an Eúzēn account alone does not grant Vercel access. If access is denied, contact me rather than creating extra accounts.
+Open https://euzen-fkbp4uxnp-nap-studios.vercel.app. You may first see Vercel's protected-access sign-in. Access must be approved separately; having an Eúzēn account alone does not grant Vercel access. If access is denied, contact me rather than creating extra accounts.
 
 You can explore as a guest. For optional account synchronization, open Settings & Data, read the privacy information, confirm participation and sign in using the code sent to your email. Enter that code only in Eúzēn. Choose German or English in settings; the beta guide also supports Greek.
 

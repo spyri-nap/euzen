@@ -1,5 +1,7 @@
 # Einladungen · nur als Entwurf, kein automatischer Versand
 
+Aktueller fertig formulierter englischer Entwurf und gemeinsames Testpaket: TEST-PACK-0.6.md. Die folgenden Vorlagen sind ältere allgemeine Muster; für den ersten Test den aktuellen Entwurf mit fiktiven Inhalten und der versionierten URL aus RELEASE-0.6-TEST.md verwenden. Es wurde nichts versendet.
+
 ## Deutsch
 
 Hallo {Name}, teste Eúzēn am {Datum}: {Test-URL}. Dies ist eine geschlossene Testversion. Du benötigst freigegebenen Vercel-Zugang und meldest dich anschließend in Eúzēn mit einem E-Mail-Code an. Gib den Code nur dort ein und teile ihn nicht.

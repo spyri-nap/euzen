@@ -2,6 +2,8 @@
 
 Version convention preserved: package 0.6.0 and UI 0.6. Exact PWA hash appears under installation help → technical diagnosis. Use the versioned Eúzēn deployment attached to the application commit; do not confuse an old alias service-worker shell with the new version.
 
+Application commit: 14271bd9800d75d6e1c7b533e4b68022c953bfcf. PWA build: 79dc1f96e5c4. Protected versioned preview: https://euzen-fkbp4uxnp-nap-studios.vercel.app. All 113 tests, TypeScript/production/PWA build, format and diff checks passed. First-user session persisted after reload; progress had no horizontal overflow at all four measured viewports. Invitation remains unsent.
+
 ## Changes
 
 - Onboarding now describes the actual guest workflow and explicitly directs users to Library → Create exercise.
