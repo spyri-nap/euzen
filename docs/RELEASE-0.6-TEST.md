@@ -25,4 +25,4 @@ Before updates: export JSON backup, finish active sessions, close all old app wi
 
 ## Handoff
 
-Invitation/tasks/feedback: TEST-PACK-0.6.md. Detailed guides: BETA-GUIDE-DE.md, BETA-GUIDE-EN.md, BETA-GUIDE-EL.md. Device steps: DEVICE-TESTS.md and ACCEPTANCE-2026-11-04.md. Deletion proposal remains pending; no automatic deletion is implemented or promised.
+Invitation/tasks/feedback: TEST-PACK-0.6.md. Detailed guides: BETA-GUIDE-DE.md, BETA-GUIDE-EN.md, BETA-GUIDE-EL.md. Device steps: DEVICE-TESTS.md and ACCEPTANCE-2026-11-04.md. Confirmed manual retention rule: test data/accounts within 30 days after test end; feedback deleted/anonymized within 90 days of receipt. No automatic deletion is implemented or promised. Provider backup evidence and legal review remain external.

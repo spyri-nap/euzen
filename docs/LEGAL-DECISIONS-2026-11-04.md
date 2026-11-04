@@ -4,7 +4,7 @@ Technical inventory: controller/contact are confirmed; local guest storage is se
 
 Official source checked: [Regulation (EU) 2016/679, EUR-Lex](https://eur-lex.europa.eu/eli/reg/2016/679/oj). Article 5(1)(e) requires storage limitation; Article 13 requires the retention period or its criteria and information on recipients and applicable transfers. Consequently, indefinite retention without a purpose-based rule is not a finished retention concept. Article 6 legal basis and potential Article 9 implications of actual training information require a factual/legal assessment; a UI health-data warning alone does not settle classification.
 
-Proposal pending operator answer: account/test data deleted no later than 30 days after closed-test end; feedback deleted or permanently anonymized within 90 days. This is a proposal, not an implemented automatic job or promise. Define test end, responsible person, request verification, database/auth removal, provider backups and deletion record before publishing a binding operational promise.
+Operator confirmed on 4 November 2026: account/test data deleted no later than 30 days after closed-test end; feedback deleted or permanently anonymized within 90 days of receipt. This is a manual operator rule, not an implemented automatic job. Operational steps and responsibility are recorded in RETENTION-AND-DELETION.md. Provider backup evidence and legal review remain separate.
 
 Alternative: remain with fictitious test content until the decisions and implementation are complete. No existing personal data are erased under this task. Requests continue to go to info@nap-studios.de; never request codes or training backups as identity evidence.
 
