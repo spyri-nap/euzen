@@ -1117,6 +1117,7 @@ details[open] summary {
   gap: 1px;
 }
 .modal {
+  margin: auto;
   border: 1px solid #d9decb;
   background: #fcfcf6;
   color: var(--ink);
@@ -1158,18 +1159,19 @@ details[open] summary {
 }
 .legal-content {
   max-width: 72ch;
+  overflow-wrap: anywhere;
 }
 .legal-content section + section {
-  margin-top: var(--space-3);
+  margin-top: var(--card-gap);
 }
 .legal-content h3 {
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--label-gap);
 }
 .legal-content p {
   line-height: 1.65;
 }
 .legal-links {
-  margin: var(--space-3) 0;
+  margin: var(--card-gap) 0;
 }
 .field {
   display: flex;

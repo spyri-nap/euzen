@@ -1,5 +1,7 @@
 import { Modal } from "./common";
-import { getLanguage } from "../i18n";
+import { useLanguage } from "../i18n";
+import privacyDocument from "../../public/datenschutz.html?raw";
+import imprintDocument from "../../public/impressum.html?raw";
 
 type LegalPage = "privacy" | "imprint";
 
@@ -75,7 +77,7 @@ export function LegalPages({
   onClose: () => void;
   onConfirm?: () => void;
 }) {
-  const language = getLanguage() === "en" ? "en" : "de";
+  const language = useLanguage();
   const content =
     page === "imprint"
       ? {
@@ -111,30 +113,40 @@ export function LegalPages({
   return (
     <Modal title={content.title} onClose={onClose} wide>
       <article className="legal-content" lang={language}>
-        {content.sections.map(([heading, text]) => (
-          <section key={heading}>
-            <h3>{heading}</h3>
-            <p>{text}</p>
-          </section>
-        ))}
-        <p className="hint">
-          <a
-            href={page === "privacy" ? "/datenschutz.html" : "/impressum.html"}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {language === "en"
-              ? "Open the standalone page"
-              : "Eigenständige Seite öffnen"}
-          </a>
-        </p>
+        {language === "en" &&
+          content.sections.map(([heading, text]) => (
+            <section key={heading}>
+              <h3>{heading}</h3>
+              <p>{text}</p>
+            </section>
+          ))}
+        {language === "en" && (
+          <p>
+            English summary above. The complete original German document
+            follows.
+          </p>
+        )}
+        <div
+          lang="de"
+          dangerouslySetInnerHTML={{
+            __html: (page === "privacy" ? privacyDocument : imprintDocument)
+              .split("<main>")[1]
+              .split("</main>")[0]
+              .replace(
+                /<p><a href="\/impressum.html">[\s\S]*?<\/p>|<p><a href="\/">Zur App<\/a><\/p>/g,
+                "",
+              ),
+          }}
+        />
       </article>
       {onConfirm && (
-        <button type="button" className="btn primary" onClick={onConfirm}>
-          {language === "en"
-            ? "Privacy information understood"
-            : "Datenschutz verstanden"}
-        </button>
+        <div className="modal-actions">
+          <button type="button" className="btn primary" onClick={onConfirm}>
+            {language === "en"
+              ? "Privacy information read and understood"
+              : "Datenschutzinformationen gelesen und verstanden"}
+          </button>
+        </div>
       )}
     </Modal>
   );

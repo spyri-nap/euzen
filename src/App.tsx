@@ -832,15 +832,15 @@ function Settings({
   );
   return (
     <Modal title={tr("Deine Daten. Dein Raum.")} onClose={onClose}>
+      <Suspense
+        fallback={
+          <p role="status">{tr("Dein Raum für Bewegung wird geöffnet …")}</p>
+        }
+      >
+        <Account />
+        {syncPanel}
+      </Suspense>
       <fieldset className="app-fieldset" disabled={readonly}>
-        <Suspense
-          fallback={
-            <p role="status">{tr("Dein Raum für Bewegung wird geöffnet …")}</p>
-          }
-        >
-          <Account />
-          {syncPanel}
-        </Suspense>
         <Field label={tr("Sprache der Oberfläche")}>
           <select
             value={state.preferences.language}

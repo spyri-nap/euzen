@@ -1,6 +1,6 @@
 import { holdEditor } from "../data/editGuard";
 import { t as tr } from "../i18n";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X, ArrowRight, Leaf } from "lucide-react";
 
 export function Modal({
@@ -15,27 +15,32 @@ export function Modal({
   wide?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   useEffect(() => {
+    const trigger = document.activeElement;
     const dialog = ref.current!;
     dialog.showModal();
     const release = holdEditor();
     return () => {
       dialog.close();
       release();
+      if (trigger instanceof HTMLElement && trigger.isConnected)
+        trigger.focus();
     };
   }, []);
   return (
     <dialog
       ref={ref}
       className={wide ? "modal wide" : "modal"}
-      aria-label={title}
+      aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         onClose();
       }}
     >
       <div className="modal-head">
-        <h2>{title}</h2>
+        <h2 id={titleId}>{title}</h2>
         <button
           className="icon-btn"
           aria-label={tr("Schließen")}

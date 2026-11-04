@@ -222,6 +222,7 @@ export function Account() {
                 busy ||
                 !consent ||
                 !privacyUnderstood ||
+                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
                 clock < service.retryAt
               }
             >
