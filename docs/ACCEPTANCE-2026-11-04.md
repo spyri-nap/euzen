@@ -36,4 +36,10 @@ Responsive results are browser emulation, not physical devices. Core feature reg
 
 ## Physical checklist for later
 
+Final application commit: a451605. Preview: https://euzen-3unuetgyc-nap-studios.vercel.app. Final PWA build: 9655c8b38e8b. Deployment dpl_2XdyWewiYSXtxmh2PsTutm5zdyVe is READY and its startup was visually confirmed in authenticated Arc. Local port 5186 serves matching final asset references. The branch alias showed an old 0.5 worker in Arc; use the versioned URL for a clean test or close all alias clients to allow safe activation. No storage deletion is needed.
+
+Update observation: old diagnostic 063cdcdda9f3 remained active with a new-version-ready message; after closing and reopening the client the diagnostic changed to 9655c8b38e8b. Mobile dialog and online startup screenshots were captured in the work session but not exported as standalone files. Arc automation could not complete online modal interaction (accessibility click had no effect; coordinate fallback returned noWindowsAvailable). Equivalent dialogs passed local browser verification. This is not a claim of complete manual online acceptance.
+
+Verdict: suitable for controlled web usability testing with fictitious content on the verified version. Physical testing is explicitly deferred by the operator. Legal decisions/review described in the actual legal document remain outside this technical verdict.
+
 Use final preview on iPhone Safari and installed Home Screen app: open each legal dialog, scroll to end, close, reopen; verify keyboard does not hide email/action; start/pause/resume a fictitious workout; relaunch and check persistence. Record iOS/device/build and pass/fail. Repeat on Android Chrome and installed PWA when a device becomes available. Never send codes or personal training backups.
