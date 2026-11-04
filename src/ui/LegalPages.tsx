@@ -2,6 +2,7 @@ import { Modal } from "./common";
 import { useLanguage } from "../i18n";
 import privacyDocument from "../../public/datenschutz.html?raw";
 import imprintDocument from "../../public/impressum.html?raw";
+import privacyEnglish from "../../public/privacy-en.html?raw";
 
 type LegalPage = "privacy" | "imprint";
 
@@ -114,24 +115,25 @@ export function LegalPages({
     <Modal title={content.title} onClose={onClose} wide>
       <article className="legal-content" lang={language}>
         {language === "en" &&
+          page === "imprint" &&
           content.sections.map(([heading, text]) => (
             <section key={heading}>
               <h3>{heading}</h3>
               <p>{text}</p>
             </section>
           ))}
-        {language === "en" && (
-          <p>
-            English summary above. The complete original German document
-            follows.
-          </p>
-        )}
         <div
-          lang="de"
+          lang={page === "privacy" ? language : "de"}
           dangerouslySetInnerHTML={{
-            __html: (page === "privacy" ? privacyDocument : imprintDocument)
+            __html: (page === "privacy"
+              ? language === "en"
+                ? privacyEnglish
+                : privacyDocument
+              : imprintDocument
+            )
               .split("<main>")[1]
               .split("</main>")[0]
+              .replace(/<p><a href="\/">Back to the app<\/a><\/p>/g, "")
               .replace(
                 /<p><a href="\/impressum.html">[\s\S]*?<\/p>|<p><a href="\/">Zur App<\/a><\/p>/g,
                 "",
